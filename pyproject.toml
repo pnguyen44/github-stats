@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "github-stats"
+version = "0.1.0"
+description = ""
+authors = ["AUTOMATED GithubAction <noreply@simplisafe.com>"]
+readme = "README.md"
+packages = [{include = "github_stats"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pygithub = "^1.58.2"
+requests = "^2.31.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
