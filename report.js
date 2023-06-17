@@ -1,17 +1,18 @@
 const {
 	getRepos,
 	getRepoPullRequests,
-	getTeamMembers,
+	getAllTeamMembers,
+	getAllReposForTeams,
 	paginate,
 } = require('./utils/githubUtils');
 const { exportToExcel } = require('./utils/exportUtils');
 
-const { TEAM } = require('./constant');
+const { TEAMS } = require('./constant');
 
 async function getAllPullRequests(teamMembers) {
 	console.log('Getting all pull requests');
 
-	const repos = await paginate(getRepos);
+	const repos = await getAllReposForTeams(TEAMS);
 
 	console.log('repos', repos.length);
 
@@ -24,7 +25,7 @@ async function getAllPullRequests(teamMembers) {
 	return result;
 }
 
-getTeamMembers(TEAM).then((result) => {
+getAllTeamMembers(TEAMS).then((result) => {
 	const teamMembers = result;
 
 	getAllPullRequests(teamMembers)

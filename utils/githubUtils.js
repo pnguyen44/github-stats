@@ -1,18 +1,20 @@
 const { Octokit } = require('@octokit/rest');
 
-const { OWNER, TEAM, PER_PAGE } = require('../constant');
+const { OWNER, PER_PAGE } = require('../constant');
 
 const octokit = new Octokit({
 	auth: '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',
 });
 
-async function getTeamMembers(team) {
+async function getTeamMembers(page, team) {
 	try {
 		const response = await octokit.request(
 			'GET /orgs/{org}/teams/{team_slug}/members',
 			{
 				org: OWNER,
 				team_slug: team,
+				per_page: PER_PAGE,
+				page,
 				headers: {
 					'X-GitHub-Api-Version': '2022-11-28',
 				},
@@ -26,14 +28,26 @@ async function getTeamMembers(team) {
 	}
 }
 
-async function getRepos(page = 1) {
+async function getAllTeamMembers(teams) {
+	let result = [];
+	let data;
+	for (const team of teams) {
+		data = await paginate(getTeamMembers, team);
+		result = result.concat(data);
+	}
+	const unique = [...new Set(result)];
+	console.log('team members', unique.length);
+	return unique;
+}
+
+async function getRepos(page, team) {
 	console.log('get repo page', page);
 	try {
 		const response = await octokit.request(
 			'GET /orgs/{org}/teams/{team_slug}/repos',
 			{
 				org: OWNER,
-				team_slug: TEAM,
+				team_slug: team,
 				per_page: PER_PAGE,
 				page,
 				headers: {
@@ -49,6 +63,21 @@ async function getRepos(page = 1) {
 	} catch (err) {
 		console.log('Error in getting repos', err);
 	}
+}
+
+async function getAllReposForTeams(teams) {
+	let result = [];
+	let data;
+
+	for (const team of teams) {
+		console.log('Getting repos for team:', team);
+		data = await paginate(getRepos, team);
+		result = result.concat(data);
+	}
+
+	const unique = [...new Set(result)];
+	console.log('repos', unique.length);
+	return unique;
 }
 
 async function getRepo(repo) {
@@ -143,5 +172,6 @@ module.exports = {
 	getRepos,
 	getRepo,
 	getRepoPullRequests,
-	getTeamMembers,
+	getAllTeamMembers,
+	getAllReposForTeams,
 };
