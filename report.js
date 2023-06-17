@@ -14,8 +14,6 @@ async function getAllPullRequests(teamMembers) {
 
 	const repos = await getAllReposForTeams(TEAMS);
 
-	console.log('repos', repos.length);
-
 	let result = [];
 
 	for (const repo of repos) {
@@ -30,7 +28,7 @@ getAllTeamMembers(TEAMS).then((result) => {
 
 	getAllPullRequests(teamMembers)
 		.then((data) => {
-			exportToExcel('Pull Request', data)
+			exportToExcel('Pull Requests', data)
 				.then(() => {
 					console.log('Data exported to Excel successfully');
 				})

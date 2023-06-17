@@ -6,6 +6,10 @@ const octokit = new Octokit({
 	auth: TOKEN,
 });
 
+const headers = {
+	'X-GitHub-Api-Version': '2022-11-28',
+};
+
 async function getTeamMembers(page, team) {
 	try {
 		const response = await octokit.request(
@@ -15,9 +19,7 @@ async function getTeamMembers(page, team) {
 				team_slug: team,
 				per_page: PER_PAGE,
 				page,
-				headers: {
-					'X-GitHub-Api-Version': '2022-11-28',
-				},
+				headers,
 			}
 		);
 		const { data } = response;
@@ -50,9 +52,7 @@ async function getRepos(page, team) {
 				team_slug: team,
 				per_page: PER_PAGE,
 				page,
-				headers: {
-					'X-GitHub-Api-Version': '2022-11-28',
-				},
+				headers,
 			}
 		);
 
@@ -66,6 +66,8 @@ async function getRepos(page, team) {
 }
 
 async function getAllReposForTeams(teams) {
+	console.log('Getting repos for teams');
+
 	let result = [];
 	let data;
 
@@ -76,7 +78,7 @@ async function getAllReposForTeams(teams) {
 	}
 
 	const unique = [...new Set(result)];
-	console.log('repos', unique.length);
+	console.log('total repos', unique.length);
 	return unique;
 }
 
@@ -85,9 +87,7 @@ async function getRepo(repo) {
 		const response = await octokit.request('GET /repos/{owner}/{repo}', {
 			owner: OWNER,
 			repo,
-			headers: {
-				'X-GitHub-Api-Version': '2022-11-28',
-			},
+			headers,
 		});
 
 		const { data } = response;
@@ -107,9 +107,7 @@ async function getRepoPullRequests(page = 1, teamMembers, repo) {
 			per_page: PER_PAGE,
 			page,
 			repo,
-			headers: {
-				'X-GitHub-Api-Version': '2022-11-28',
-			},
+			headers,
 		});
 
 		const { data } = response;
