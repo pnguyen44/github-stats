@@ -5,6 +5,7 @@ const {
 	paginate,
 } = require('./utils/githubUtils');
 const { exportToExcel } = require('./utils/exportUtils');
+const { sortDataByField } = require('./utils/reportUtils');
 
 const { TEAMS } = require('./config');
 
@@ -27,7 +28,9 @@ getAllTeamMembers(TEAMS).then((result) => {
 
 	getAllPullRequests(teamMembers)
 		.then((data) => {
-			exportToExcel('Pull Requests', data)
+			const sortedData = sortDataByField(data, 'created_at', 'asc');
+
+			exportToExcel('Pull Requests', sortedData)
 				.then(() => {
 					console.log('Data exported to Excel successfully');
 				})
