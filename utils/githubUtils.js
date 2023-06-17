@@ -134,13 +134,15 @@ async function getRepoPullRequests(
 					html_url,
 					state,
 					title,
-					user,
+					user: { login },
 					created_at,
 					updated_at,
 					requested_teams,
 					requested_reviewers,
+					base: {
+						repo: { name },
+					},
 				} = d;
-				const { login } = user;
 
 				const requestedTeam = requested_teams.map((r) => r.name);
 				const requestedReviewers = requested_reviewers.map((r) => r.login);
@@ -150,6 +152,7 @@ async function getRepoPullRequests(
 					updated_at: formatDate(updated_at),
 					state,
 					user: login,
+					repo: name,
 					title,
 					html_url,
 					requested_teams: requestedTeam,

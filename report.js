@@ -51,4 +51,4 @@ function createPullRequestsReport(name, state = PR_STATE.open) {
 	});
 }
 
-createPullRequestsReport('All PRs', PR_STATE.all);
+createPullRequestsReport('Open PRs', PR_STATE.open);
