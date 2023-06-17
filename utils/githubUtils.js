@@ -2,6 +2,7 @@ const { Octokit } = require('@octokit/rest');
 
 const { OWNER, PER_PAGE, TOKEN } = require('../config');
 const { formatDate } = require('./reportUtils');
+const { PR_STATE } = require('../constant');
 
 const octokit = new Octokit({
 	auth: TOKEN,
@@ -99,7 +100,12 @@ async function getRepo(repo) {
 	}
 }
 
-async function getRepoPullRequests(page = 1, teamMembers, repo) {
+async function getRepoPullRequests(
+	page = 1,
+	teamMembers,
+	repo,
+	state = PR_STATE.open
+) {
 	console.log('get pull request: repo=', repo, 'page=', page);
 
 	try {
@@ -108,6 +114,7 @@ async function getRepoPullRequests(page = 1, teamMembers, repo) {
 			per_page: PER_PAGE,
 			page,
 			repo,
+			state,
 			headers,
 		});
 
