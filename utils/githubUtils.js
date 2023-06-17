@@ -91,17 +91,33 @@ async function getRepoPullRequests(page = 1, teamMembers, repo) {
 				return teamMembers.includes(login);
 			})
 			.map((d) => {
-				const { html_url, state, title, user, created_at, updated_at } = d;
-				const { login } = user;
-				return {
+				const {
 					html_url,
 					state,
 					title,
-					login,
+					user,
 					created_at,
 					updated_at,
+					requested_teams,
+					requested_reviewers,
+				} = d;
+				const { login } = user;
+
+				const requestedTeam = requested_teams.map((r) => r.name);
+				const requestedReviewers = requested_reviewers.map((r) => r.login);
+
+				return {
+					created_at,
+					updated_at,
+					state,
+					user: login,
+					title,
+					html_url,
+					requested_teams: requestedTeam,
+					requested_reviewers: requestedReviewers,
 				};
 			});
+
 		return result;
 	} catch (error) {
 		console.error('Error fetching repository pull requests:', error);
