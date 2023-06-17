@@ -9,15 +9,28 @@ const { TEAM } = require('./constant');
 
 async function getAllPullRequests(teamMembers) {
 	console.log('Getting all pull requests');
-	const repos = await getRepos();
-	console.log('repos', repos);
+	let repos = [];
+	let page = 0;
+
+	do {
+		page += 1;
+		const result = await getRepos(page);
+		repos = repos.concat(result);
+	} while (result.length > 0);
+
+	console.log('repos', repos.length);
+
 	let pullRequests = [];
 
 	for (const repo of repos) {
-		const prs = await getRepoPullRequests(teamMembers, repo);
-		if (prs.length) {
-			pullRequests = pullRequests.concat(prs);
-		}
+		page = 0;
+		do {
+			page += 1;
+			const result = await getRepoPullRequests(teamMembers, repo, page);
+			if (result.length) {
+				pullRequests = pullRequests.concat(result);
+			}
+		} while (result.length > 0);
 	}
 	return pullRequests;
 }

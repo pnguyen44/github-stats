@@ -1,6 +1,6 @@
 const { Octokit } = require('@octokit/rest');
 
-const { OWNER, TEAM } = require('../constant');
+const { OWNER, TEAM, PER_PAGE } = require('../constant');
 
 const octokit = new Octokit({
 	auth: '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',
@@ -26,13 +26,16 @@ async function getTeamMembers(team) {
 	}
 }
 
-async function getRepos() {
+async function getRepos(page = 1) {
+	console.log('get repo page', page);
 	try {
 		const response = await octokit.request(
 			'GET /orgs/{org}/teams/{team_slug}/repos',
 			{
 				org: OWNER,
 				team_slug: TEAM,
+				per_page: PER_PAGE,
+				page,
 				headers: {
 					'X-GitHub-Api-Version': '2022-11-28',
 				},
@@ -66,10 +69,14 @@ async function getRepo(repo) {
 	}
 }
 
-async function getRepoPullRequests(teamMembers, repo) {
+async function getRepoPullRequests(teamMembers, repo, page = 1) {
+	console.log('get pull request: repo=', repo, 'page=', page);
+
 	try {
 		const response = await octokit.request('GET /repos/{owner}/{repo}/pulls', {
 			owner: OWNER,
+			per_page: PER_PAGE,
+			page,
 			repo,
 			headers: {
 				'X-GitHub-Api-Version': '2022-11-28',
