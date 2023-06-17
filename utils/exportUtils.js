@@ -6,13 +6,11 @@ async function exportToExcel(filename, data) {
 
 	// header
 	const columns = Object.keys(data[0]);
-  console.log("columns", columns)
 	worksheet.addRow(columns);
 
 	// data rows
 	data.forEach((item) => {
 		const values = Object.values(item);
-    console.log("value", values)
 		worksheet.addRow(values);
 	});
 

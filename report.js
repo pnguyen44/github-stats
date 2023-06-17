@@ -1,5 +1,5 @@
-const { getRepos, getRepoPullRequests } = require('./githubUtils');
-const { exportToExcel } = require('./exportUtils');
+const { getRepos, getRepoPullRequests } = require('./utils/githubUtils');
+const { exportToExcel } = require('./utils/exportUtils');
 
 async function getAllPullRequests() {
 	console.log('Getting all pull requests');
