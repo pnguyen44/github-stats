@@ -29,7 +29,7 @@ async function getAllPullRequests(teamMembers, state = PR_STATE.open) {
 	return result;
 }
 
-function createPullRequestsReport(state = PR_STATE.open) {
+function createPullRequestsReport(name, state = PR_STATE.open) {
 	getAllTeamMembers(TEAMS).then((result) => {
 		const teamMembers = result;
 
@@ -37,7 +37,7 @@ function createPullRequestsReport(state = PR_STATE.open) {
 			.then((data) => {
 				const sortedData = sortDataByField(data, 'created_at', 'asc');
 
-				exportToExcel('Pull Requests', sortedData)
+				exportToExcel(name, sortedData)
 					.then(() => {
 						console.log('Data exported to Excel successfully');
 					})
@@ -51,4 +51,4 @@ function createPullRequestsReport(state = PR_STATE.open) {
 	});
 }
 
-createPullRequestsReport(PR_STATE.all);
+createPullRequestsReport('All PRs', PR_STATE.all);
