@@ -3,9 +3,9 @@ const {
   getAllTeamMembers,
   getAllReposForTeams,
   paginate,
-} = require('./utils/githubUtils');
-const { exportToExcel } = require('./utils/exportUtils');
-const { sortDataByField } = require('./utils/reportUtils');
+} = require('../src/utils/githubUtils');
+const { exportToExcel } = require('../src/utils/exportUtils');
+const { sortDataByField } = require('../src/utils/reportUtils');
 const { PR_STATE } = require('./constant');
 
 const { TEAMS } = require('./config');
