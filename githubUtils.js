@@ -5,15 +5,25 @@ const octokit = new Octokit({
 });
 
 const OWNER = 'simplisafe';
+const TEAM = 'camfam';
 
 async function getRepos() {
 	try {
-		const response = await octokit.request('GET /orgs/{owner}/repos', {
-			owner: OWNER,
-		});
+		const response = await octokit.request(
+			'GET /orgs/{org}/teams/{team_slug}/repos',
+			{
+				org: OWNER,
+				team_slug: TEAM,
+				headers: {
+					'X-GitHub-Api-Version': '2022-11-28',
+				},
+			}
+		);
 
 		const { data } = response;
-		console.log(response.status);
+		result = data.map((d) => d.name);
+		// console.log(result);
+		return result;
 	} catch (err) {
 		console.log('Error in getting repos', err);
 	}
@@ -37,25 +47,34 @@ async function getRepo(repo) {
 	}
 }
 
-async function getRepositoryPullRequest(owner, repo, perPage = 10) {
+async function getRepoPullRequests(repo) {
 	try {
 		const response = await octokit.request('GET /repos/{owner}/{repo}/pulls', {
 			owner: OWNER,
 			repo,
-			per_page: perPage,
 			headers: {
 				'X-GitHub-Api-Version': '2022-11-28',
 			},
 		});
 
-		const { data } = response.data;
-		// console.log(prs);
-		console.log(response.status);
+		const { data } = response;
+		result = data.map((d) => {
+			const { html_url, state, title, user, created_at, updated_at } = d;
+			return {
+				html_url,
+				state,
+				user,
+				title,
+				user: user.login,
+				created_at,
+				updated_at,
+			};
+		});
+		// console.log(result);
+		return result;
 	} catch (error) {
 		console.error('Error fetching repository pull requests:', error);
 	}
 }
 
-getRepos();
-getRepo('bender');
-getRepositoryPullRequest('simplisafe', 'bender', 2);
+module.exports = { getRepos, getRepo, getRepoPullRequests };
