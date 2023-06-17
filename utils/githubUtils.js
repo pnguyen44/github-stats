@@ -1,6 +1,7 @@
 const { Octokit } = require('@octokit/rest');
 
 const { OWNER, PER_PAGE, TOKEN } = require('../config');
+const { formatDate } = require('./reportUtils');
 
 const octokit = new Octokit({
 	auth: TOKEN,
@@ -134,8 +135,8 @@ async function getRepoPullRequests(page = 1, teamMembers, repo) {
 				const requestedReviewers = requested_reviewers.map((r) => r.login);
 
 				return {
-					created_at,
-					updated_at,
+					created_at: formatDate(created_at),
+					updated_at: formatDate(updated_at),
 					state,
 					user: login,
 					title,

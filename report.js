@@ -1,5 +1,4 @@
 const {
-	getRepos,
 	getRepoPullRequests,
 	getAllTeamMembers,
 	getAllReposForTeams,
