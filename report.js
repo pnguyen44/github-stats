@@ -7,7 +7,7 @@ const {
 } = require('./utils/githubUtils');
 const { exportToExcel } = require('./utils/exportUtils');
 
-const { TEAMS } = require('./constant');
+const { TEAMS } = require('./config');
 
 async function getAllPullRequests(teamMembers) {
 	console.log('Getting all pull requests');

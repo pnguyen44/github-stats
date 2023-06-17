@@ -1,9 +1,9 @@
 const { Octokit } = require('@octokit/rest');
 
-const { OWNER, PER_PAGE } = require('../constant');
+const { OWNER, PER_PAGE, TOKEN } = require('../config');
 
 const octokit = new Octokit({
-	auth: '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',
+	auth: TOKEN,
 });
 
 async function getTeamMembers(page, team) {
