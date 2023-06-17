@@ -69,7 +69,7 @@ async function getRepo(repo) {
 	}
 }
 
-async function getRepoPullRequests(teamMembers, repo, page = 1) {
+async function getRepoPullRequests(page = 1, teamMembers, repo) {
 	console.log('get pull request: repo=', repo, 'page=', page);
 
 	try {
@@ -108,4 +108,24 @@ async function getRepoPullRequests(teamMembers, repo, page = 1) {
 	}
 }
 
-module.exports = { getRepos, getRepo, getRepoPullRequests, getTeamMembers };
+async function paginate(func, ...args) {
+	let result = [];
+	let page = 0;
+	let data;
+
+	do {
+		page += 1;
+		data = await func(page, ...args);
+		result = result.concat(data);
+	} while (data.length > 0);
+
+	return result;
+}
+
+module.exports = {
+	paginate,
+	getRepos,
+	getRepo,
+	getRepoPullRequests,
+	getTeamMembers,
+};

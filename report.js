@@ -2,6 +2,7 @@ const {
 	getRepos,
 	getRepoPullRequests,
 	getTeamMembers,
+	paginate,
 } = require('./utils/githubUtils');
 const { exportToExcel } = require('./utils/exportUtils');
 
@@ -9,30 +10,18 @@ const { TEAM } = require('./constant');
 
 async function getAllPullRequests(teamMembers) {
 	console.log('Getting all pull requests');
-	let repos = [];
-	let page = 0;
 
-	do {
-		page += 1;
-		const result = await getRepos(page);
-		repos = repos.concat(result);
-	} while (result.length > 0);
+	const repos = await paginate(getRepos);
 
 	console.log('repos', repos.length);
 
-	let pullRequests = [];
+	let result = [];
 
 	for (const repo of repos) {
-		page = 0;
-		do {
-			page += 1;
-			const result = await getRepoPullRequests(teamMembers, repo, page);
-			if (result.length) {
-				pullRequests = pullRequests.concat(result);
-			}
-		} while (result.length > 0);
+		const pullRequests = await paginate(getRepoPullRequests, teamMembers, repo);
+		result = result.concat(pullRequests);
 	}
-	return pullRequests;
+	return result;
 }
 
 getTeamMembers(TEAM).then((result) => {
