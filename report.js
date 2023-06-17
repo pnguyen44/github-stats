@@ -51,4 +51,4 @@ function createPullRequestsReport(state = PR_STATE.open) {
 	});
 }
 
-createPullRequestsReport(PR_STATE.open);
+createPullRequestsReport(PR_STATE.all);

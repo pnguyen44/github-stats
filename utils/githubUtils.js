@@ -1,6 +1,6 @@
 const { Octokit } = require('@octokit/rest');
 
-const { OWNER, PER_PAGE, TOKEN } = require('../config');
+const { OWNER, PER_PAGE, TOKEN, MAX_PAGE } = require('../config');
 const { formatDate } = require('./reportUtils');
 const { PR_STATE } = require('../constant');
 
@@ -106,6 +106,10 @@ async function getRepoPullRequests(
 	repo,
 	state = PR_STATE.open
 ) {
+	if (page > MAX_PAGE) {
+		return [];
+	}
+
 	console.log('get pull request: repo=', repo, 'page=', page);
 
 	try {
