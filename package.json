@@ -16,5 +16,9 @@
     "jest": "^29.5.0",
     "moment": "^2.29.4",
     "octokit": "^2.0.21"
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1"
   }
 }
