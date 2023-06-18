@@ -1,4 +1,4 @@
-const { sortDataByField } = require('../utils/reportUtils');
+import { sortDataByField } from '../src/utils/reportUtils';
 
 const data = [
   {

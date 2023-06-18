@@ -1,8 +1,8 @@
-const { Octokit } = require('@octokit/rest');
+import { Octokit } from '@octokit/rest';
 
-const { OWNER, PER_PAGE, TOKEN, MAX_PAGE } = require('../config');
-const { formatDate } = require('./reportUtils');
-const { PR_STATE } = require('../constant');
+import { OWNER, PER_PAGE, TOKEN, MAX_PAGE } from '../../src/config';
+import { formatDate } from './reportUtils';
+import { PR_STATE, PullRequestState } from '../../src/constant';
 
 const octokit = new Octokit({
   auth: TOKEN,
@@ -12,7 +12,10 @@ const headers = {
   'X-GitHub-Api-Version': '2022-11-28',
 };
 
-async function getTeamMembers(page, team) {
+async function getTeamMembers(
+  page: number,
+  team: string
+): Promise<Array<string>> {
   try {
     const response = await octokit.request(
       'GET /orgs/{org}/teams/{team_slug}/members',
@@ -25,15 +28,18 @@ async function getTeamMembers(page, team) {
       }
     );
     const { data } = response;
-    result = data.map((d) => d.login);
+    const result = data.map((d) => d.login);
     return result;
   } catch (err) {
     console.log('Error in getting team members', err);
+    return [];
   }
 }
 
-async function getAllTeamMembers(teams) {
-  let result = [];
+export async function getAllTeamMembers(
+  teams: Array<string>
+): Promise<string[]> {
+  let result: string[] = [];
   let data;
   for (const team of teams) {
     data = await paginate(getTeamMembers, team);
@@ -44,7 +50,10 @@ async function getAllTeamMembers(teams) {
   return unique;
 }
 
-async function getRepos(page, team) {
+async function getRepos(
+  page: number,
+  team: string
+): Promise<Array<Record<string, any>> | void> {
   console.log('get repo page', page);
   try {
     const response = await octokit.request(
@@ -59,18 +68,21 @@ async function getRepos(page, team) {
     );
 
     const { data } = response;
-    result = data.map((d) => d.name);
-    // console.log(result);
+    const result: Array<Record<string, any>> = data.map((d) => ({
+      name: d.name,
+    }));
     return result;
   } catch (err) {
     console.log('Error in getting repos', err);
   }
 }
 
-async function getAllReposForTeams(teams) {
+export async function getAllReposForTeams(
+  teams: Array<string>
+): Promise<string[]> {
   console.log('Getting repos for teams');
 
-  let result = [];
+  let result: string[] = [];
   let data;
 
   for (const team of teams) {
@@ -84,7 +96,7 @@ async function getAllReposForTeams(teams) {
   return unique;
 }
 
-async function getRepo(repo) {
+export async function getRepo(repo: string): Promise<void> {
   try {
     const response = await octokit.request('GET /repos/{owner}/{repo}', {
       owner: OWNER,
@@ -92,20 +104,18 @@ async function getRepo(repo) {
       headers,
     });
 
-    const { data } = response;
-    // console.log(data);
     console.log(response.status);
   } catch (error) {
     console.error('Error fetching repo:', error);
   }
 }
 
-async function getRepoPullRequests(
+export async function getRepoPullRequests(
   page = 1,
-  teamMembers,
-  repo,
-  state = PR_STATE.open
-) {
+  teamMembers: string[],
+  repo: string,
+  state: PullRequestState = PR_STATE.open
+): Promise<Array<Record<string, any>>> {
   if (page > MAX_PAGE) {
     return [];
   }
@@ -124,12 +134,12 @@ async function getRepoPullRequests(
 
     const { data } = response;
 
-    result = data
-      .filter((d) => {
+    const result: Array<Record<string, any>> = data
+      .filter((d: Record<string, any>) => {
         const { login } = d.user;
         return teamMembers.includes(login);
       })
-      .map((d) => {
+      .map((d: Record<string, any>) => {
         const {
           html_url,
           state,
@@ -144,8 +154,10 @@ async function getRepoPullRequests(
           },
         } = d;
 
-        const requestedTeam = requested_teams.map((r) => r.name);
-        const requestedReviewers = requested_reviewers.map((r) => r.login);
+        const requestedTeam: string[] =
+          requested_teams?.map((r: Record<string, any>) => r.name) || [];
+        const requestedReviewers: string[] =
+          requested_reviewers?.map((r: Record<string, any>) => r.login) || [];
 
         return {
           created_at: formatDate(created_at),
@@ -163,28 +175,25 @@ async function getRepoPullRequests(
     return result;
   } catch (error) {
     console.error('Error fetching repository pull requests:', error);
+    return [];
   }
 }
 
-async function paginate(func, ...args) {
-  let result = [];
+export async function paginate(
+  func: (...args: any) => Promise<any>,
+  ...args: any[]
+): Promise<Array<any>> {
+  let result: Record<string, any>[] = [];
   let page = 0;
   let data;
 
   do {
     page += 1;
     data = await func(page, ...args);
-    result = result.concat(data);
-  } while (data.length > 0);
+    if (data) {
+      result = result.concat(data);
+    }
+  } while (data && data.length > 0);
 
   return result;
 }
-
-module.exports = {
-  paginate,
-  getRepos,
-  getRepo,
-  getRepoPullRequests,
-  getAllTeamMembers,
-  getAllReposForTeams,
-};

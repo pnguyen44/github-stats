@@ -1,18 +1,22 @@
-const moment = require('moment');
+import moment from 'moment';
 
-function formatDate(dateString) {
+export function formatDate(dateString: string): string {
   const formattedDate = moment(dateString).format('YYYY-MM-DD h:mm:ss A');
   return formattedDate;
 }
 
-function isStringConvertibleToDate(value) {
+function isStringConvertibleToDate(value: string): boolean {
   return !isNaN(Date.parse(value));
 }
 
-function sortDataByField(data, field, sortDirection) {
+export function sortDataByField(
+  data: Record<string, any>[],
+  field: string,
+  sortDirection: 'asc' | 'desc'
+): Record<string, any>[] {
   const sortedArray = data.slice().sort((a, b) => {
-    let aVal = a[field];
-    let bVal = b[field];
+    let aVal: any = a[field];
+    let bVal: any = b[field];
 
     if (isStringConvertibleToDate(aVal)) {
       aVal = new Date(aVal);
@@ -32,5 +36,3 @@ function sortDataByField(data, field, sortDirection) {
 
   return sortedArray;
 }
-
-module.exports = { formatDate, sortDataByField };

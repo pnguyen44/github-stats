@@ -1,6 +1,10 @@
-const ExcelJS = require('exceljs');
+// import ExcelJS from 'exceljs';
+import * as ExcelJS from 'exceljs';
 
-async function exportToExcel(filename, data) {
+export async function exportToExcel(
+  filename: string,
+  data: Record<string, any>
+): Promise<void> {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Sheet 1');
 
@@ -9,19 +13,15 @@ async function exportToExcel(filename, data) {
   worksheet.addRow(columns);
 
   // data rows
-  data.forEach((item) => {
+  data.forEach((item: Record<string, any>) => {
     const values = Object.values(item);
     worksheet.addRow(values);
   });
 
   // Generate the Excel file
-  const buffer = await workbook.xlsx.writeBuffer();
-
   const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
 
   const fileName = `reports/${filename}_${timestamp}.xlsx`;
 
   await workbook.xlsx.writeFile(fileName);
 }
-
-module.exports = { exportToExcel };
