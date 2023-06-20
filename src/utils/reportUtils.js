@@ -5,6 +5,13 @@ function formatDate(dateString) {
   return formattedDate;
 }
 
+function getRelativeDateRange(daysAgo) {
+  const today = moment().format('YYYY-MM-DD');
+  const startDate = moment().subtract(daysAgo, 'days').format('YYYY-MM-DD');
+
+  return { startDate, endDate: today };
+}
+
 function isStringConvertibleToDate(value) {
   return !isNaN(Date.parse(value));
 }
@@ -33,4 +40,4 @@ function sortDataByField(data, field, sortDirection) {
   return sortedArray;
 }
 
-module.exports = { formatDate, sortDataByField };
+module.exports = { formatDate, sortDataByField, getRelativeDateRange };

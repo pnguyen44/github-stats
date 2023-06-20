@@ -1,40 +1,25 @@
-const {
-  getRepoPullRequests,
-  getAllTeamMembers,
-  getAllReposForTeams,
-  paginate,
-} = require('../src/utils/githubUtils');
+const { GitHub } = require('./github');
 const { exportToExcel } = require('../src/utils/exportUtils');
 const { sortDataByField } = require('../src/utils/reportUtils');
 const { PR_STATE } = require('./constant');
 
-const { TEAMS } = require('./config');
-
-async function getAllPullRequests(teamMembers, state = PR_STATE.open) {
-  console.log('Getting all pull requests');
-
-  const repos = await getAllReposForTeams(TEAMS);
-
-  let result = [];
-
-  for (const repo of repos) {
-    const pullRequests = await paginate(
-      getRepoPullRequests,
-      teamMembers,
-      repo,
-      state
-    );
-    result = result.concat(pullRequests);
+class Report {
+  constructor(gh) {
+    this.gh = gh;
   }
-  return result;
-}
 
-function createPullRequestsReport(name, state = PR_STATE.open) {
-  getAllTeamMembers(TEAMS).then((result) => {
-    const teamMembers = result;
-
-    getAllPullRequests(teamMembers, state)
+  createPullRequestsReport(
+    name,
+    { state = PR_STATE.open, startDate, endDate, startDaysAgo }
+  ) {
+    this.gh
+      .getTeamsPullRequests({ state, startDate, endDate, startDaysAgo })
       .then((data) => {
+        if (!data.length) {
+          console.log('No results to report');
+          return;
+        }
+
         const sortedData = sortDataByField(data, 'created_at', 'asc');
 
         exportToExcel(name, sortedData)
@@ -48,7 +33,7 @@ function createPullRequestsReport(name, state = PR_STATE.open) {
       .catch((err) => {
         console.log('Error in getting all pull request', err);
       });
-  });
+  }
 }
 
-createPullRequestsReport('Open PRs', PR_STATE.open);
+module.exports = { Report };
