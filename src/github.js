@@ -93,7 +93,8 @@ class GitHub {
 
   async searchIssues({ repos, state, startDate, endDate }, filterCallback) {
     const r = repos.map((r) => `repo:${this.owner}/${r}`).join(' ');
-    const q = `${r} is:pr state:${state} created:${startDate}..${endDate}`;
+    const s = state ? `state:${state}` : '';
+    const q = `${r} is:pr ${s} created:${startDate}..${endDate}`;
 
     let result = await this.octokit
       .request('GET /search/issues', {
