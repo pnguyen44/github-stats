@@ -118,10 +118,31 @@ function reviewedWithin24hrs(reviewRequests, reviews, currentDateTime) {
   return '';
 }
 
+function resolveDateRange({ startDate, endDate, startDaysAgo }) {
+  if (startDate && endDate && startDaysAgo) {
+    throw new Error('Invalid combination of absolute and relative date range');
+  }
+
+  if ((startDate && !endDate) || (endDate && !startDate)) {
+    throw new Error('Absolute range require both start and end dates');
+  }
+
+  if (startDaysAgo > 0) {
+    return getRelativeDateRange(startDaysAgo);
+  }
+
+  if (startDate && endDate) {
+    return { startDate, endDate };
+  }
+
+  return {};
+}
+
 module.exports = {
   formatDate,
   sortDataByField,
   getRelativeDateRange,
   reviewedWithin24hrs,
   getDeadline,
+  resolveDateRange,
 };

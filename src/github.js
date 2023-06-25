@@ -33,7 +33,7 @@ class GitHub {
       };
       return await this.octokit.paginate(endpoint, parameters);
     } catch (err) {
-      console.log(`Error on ${endpoint}: ${err}`);
+      console.error(`Error on ${endpoint}: ${err}`);
     }
   }
 
@@ -219,7 +219,7 @@ class GitHub {
     );
   }
 
-  async getTeamsPullRequests({ state, startDate, endDate, startDaysAgo = 0 }) {
+  async getTeamsPullRequests({ state, startDate, endDate }) {
     console.log('Getting pull requests');
     const teamMembers = await this.getAllTeamMembers();
     const repos = await this.getAllReposForTeams(this.teams);
@@ -230,30 +230,6 @@ class GitHub {
       state,
       authors: teamMembers,
     };
-
-    if (startDate && endDate && startDaysAgo) {
-      throw new Error(
-        'Invalid combination of absolute and relative date range'
-      );
-    }
-
-    if ((startDate && !endDate) || (endDate && !startDate)) {
-      throw new Error('Absolute range require both start and end dates');
-    }
-
-    if (startDaysAgo > 0) {
-      const { startDate: start, endDate: end } =
-        getRelativeDateRange(startDaysAgo);
-
-      options.createdRange = {
-        start,
-        end,
-      };
-      options.updatedRange = {
-        start,
-        end,
-      };
-    }
 
     if (startDate && endDate) {
       options.createdRange = {
@@ -291,12 +267,11 @@ class GitHub {
     return result;
   }
 
-  async get24hReviewStats({ state, startDate, endDate, startDaysAgo = 0 }) {
+  async get24hReviewStats({ state, startDate, endDate }) {
     const prs = await this.getTeamsPullRequests({
       state,
       startDate,
       endDate,
-      startDaysAgo,
     });
 
     for (const pr of prs) {
