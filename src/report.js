@@ -8,10 +8,17 @@ class Report {
     this.gh = gh;
   }
 
-  createPullRequestsReport(
-    name,
-    { state = PR_STATE.open, startDate, endDate, startDaysAgo }
-  ) {
+  _exportToExcel(name, sortedData) {
+    exportToExcel(name, sortedData)
+      .then(() => {
+        console.log('Data exported to Excel successfully');
+      })
+      .catch((error) => {
+        console.error('Error exporting data to Excel:', error);
+      });
+  }
+
+  createPullRequestsReport(name, { state, startDate, endDate, startDaysAgo }) {
     this.gh
       .getTeamsPullRequests({ state, startDate, endDate, startDaysAgo })
       .then((data) => {
@@ -19,16 +26,26 @@ class Report {
           console.log('No results to report');
           return;
         }
-
+        // console.log('__', data);
         const sortedData = sortDataByField(data, 'created_at', 'asc');
+        this._exportToExcel(name, sortedData);
+      })
+      .catch((err) => {
+        console.log('Error in getting all pull request', err);
+      });
+  }
 
-        exportToExcel(name, sortedData)
-          .then(() => {
-            console.log('Data exported to Excel successfully');
-          })
-          .catch((error) => {
-            console.error('Error exporting data to Excel:', error);
-          });
+  create24hReviewStats(name, { state, startDate, endDate, startDaysAgo }) {
+    this.gh
+      .get24hReviewStats({ state, startDate, endDate, startDaysAgo })
+      .then((data) => {
+        if (!data.length) {
+          console.log('No results to report');
+          return;
+        }
+        console.log('__', data);
+        const sortedData = sortDataByField(data, 'created_at', 'asc');
+        this._exportToExcel(name, sortedData);
       })
       .catch((err) => {
         console.log('Error in getting all pull request', err);

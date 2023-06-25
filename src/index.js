@@ -15,23 +15,18 @@ const gh = new GitHub(config);
 
 const report = new Report(gh);
 
-let state = PR_STATE.open;
-report.createPullRequestsReport(`${state} PRs`, {
-  state,
-});
+// report.createPullRequestsReport('Open PRs', {
+//   state: PR_STATE.open,
+// });
 
-// // using relative date range
+// using relative date range
 // const startDaysAgo = 10;
-// report.createPullRequestsReport(`${state} PR from last ${startDaysAgo} days`, {
-//   state,
-//   startDaysAgo,
+// report.createPullRequestsReport(`PR from last ${startDaysAgo} days`, {
+// startDaysAgo,
 // });
 
-// // using a absolute date range
-// const startDate = '2023-05-16';
-// const endDate = '2023-06-20';
-// report.createPullRequestsReport(`${state} PRs [${startDate} - ${endDate}]`, {
-//   state,
-//   startDate,
-//   endDate,
-// });
+// using a absolute date range
+report.create24hReviewStats(`PRs`, {
+  startDate: '2023-06-07',
+  endDate: '2023-06-21',
+});

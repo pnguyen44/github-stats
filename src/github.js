@@ -1,7 +1,13 @@
 const { Octokit } = require('@octokit/rest');
+const moment = require('moment');
 
-const { formatDate, getRelativeDateRange } = require('./utils/reportUtils');
+const {
+  formatDate,
+  getRelativeDateRange,
+  reviewedWithin24hrs,
+} = require('./utils/reportUtils');
 const { PR_STATE } = require('./constant');
+const { TEAMS } = require('./config');
 
 class GitHub {
   constructor({ owner, perPage, token, teams }) {
@@ -91,22 +97,14 @@ class GitHub {
     return unique;
   }
 
-  async searchIssues({ repos, state, startDate, endDate }, filterCallback) {
+  async searchIssues({ repos, authors, state, startDate, endDate }) {
+    console.log('Searching issues');
     const r = repos.map((r) => `repo:${this.owner}/${r}`).join(' ');
     const s = state ? `state:${state}` : '';
-    const q = `${r} is:pr ${s} created:${startDate}..${endDate}`;
+    const author = authors.map((author) => `author:${author}`).join(' ');
+    const q = `${r} is:pr ${s} ${author} created:${startDate}..${endDate}`;
 
-    let result = await this.octokit
-      .request('GET /search/issues', {
-        q,
-      })
-      .then((response) => response.data.items);
-
-    if (typeof filterCallback === 'function') {
-      return result.filter(filterCallback);
-    }
-
-    return result;
+    return await this._request('GET /search/issues?q=' + encodeURIComponent(q));
   }
 
   _parseSearchIssueResponse(data) {
@@ -142,7 +140,7 @@ class GitHub {
     );
   }
 
-  async getRepoPullRequests(repo, state = PR_STATE.open, filterCallback) {
+  async getRepoPullRequests(repo, state, filterCallback) {
     let result = await this._request('GET /repos/{owner}/{repo}/pulls', {
       owner: this.owner,
       repo,
@@ -188,12 +186,29 @@ class GitHub {
     });
   }
 
-  async getTeamsPullRequests({
-    state = PR_STATE.open,
-    startDate,
-    endDate,
-    startDaysAgo = 0,
-  }) {
+  async getIssueEvents(repo, issueNumber) {
+    return await this._request(
+      'GET /repos/{owner}/{repo}/issues/{issue_number}/events',
+      {
+        owner: this.owner,
+        repo,
+        issue_number: issueNumber, // PR number
+      }
+    );
+  }
+
+  async getReviews(repo, pullNumber) {
+    return await this._request(
+      'GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews',
+      {
+        owner: this.owner,
+        repo,
+        pull_number: pullNumber,
+      }
+    );
+  }
+
+  async getTeamsPullRequests({ state, startDate, endDate, startDaysAgo = 0 }) {
     console.log('Getting pull requests');
     const teamMembers = await this.getAllTeamMembers();
     const repos = await this.getAllReposForTeams(this.teams);
@@ -228,9 +243,10 @@ class GitHub {
       startDate,
       endDate,
       state,
+      authors: teamMembers,
     };
 
-    const data = await this.searchIssues(options, filterCallback);
+    const data = await this.searchIssues(options);
     const items = data.map((d) => {
       const repo = d.repository_url.split('/').pop();
       return {
@@ -240,10 +256,51 @@ class GitHub {
     });
 
     for (const { repo, pullNumber } of items) {
-      const d = await this.getPullRequest(repo, pullNumber);
-      result = result.concat(this._parsePullRequestResponse(d));
+      const pulls = await this.getPullRequest(repo, pullNumber);
+      // remove closed PRs that have not been merged
+      const filtered = pulls.filter((pr) => {
+        if (pr.state === PR_STATE.closed && !pr.merged_at) {
+          return false;
+        }
+
+        return true;
+      });
+      result = result.concat(this._parsePullRequestResponse(filtered));
     }
     return result;
+  }
+
+  async get24hReviewStats({ state, startDate, endDate, startDaysAgo = 0 }) {
+    const prs = await this.getTeamsPullRequests({
+      state,
+      startDate,
+      endDate,
+      startDaysAgo,
+    });
+
+    for (const pr of prs) {
+      const { html_url, repo } = pr;
+      const pullNumber = html_url.split('/').pop();
+      // get issue events
+      const issueEvents = await this.getIssueEvents(repo, pullNumber);
+
+      const reviewRequests = issueEvents.filter(
+        (event) => event.event === 'review_requested'
+      );
+
+      // get reviews
+      const reviews = await this.getReviews(repo, pullNumber);
+
+      const doneWithin24hr = reviewedWithin24hrs(
+        reviewRequests,
+        reviews,
+        moment()
+      );
+
+      pr.reviewed_within_24_hours = doneWithin24hr;
+    }
+
+    return prs;
   }
 }
 

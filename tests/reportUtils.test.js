@@ -1,4 +1,8 @@
-const { sortDataByField } = require('../utils/reportUtils');
+const {
+  sortDataByField,
+  reviewedWithin24hrs,
+} = require('../src/utils/reportUtils');
+const moment = require('moment');
 
 const data = [
   {
@@ -102,5 +106,248 @@ describe('Report utils tests', () => {
     const resultDates = result.map((r) => r[field]);
 
     expect(resultDates).toEqual(want);
+  });
+
+  it('Should correctly check if PRs are review within 24 hours', () => {
+    const today = moment('2023-06-24T00:00:00Z');
+    const testCases = [
+      {
+        reviewRequests: [],
+        reviews: [],
+        currentDateTime: moment('2023-06-16T20:48:08Z'),
+        want: '',
+      },
+      {
+        reviewRequests: [
+          {
+            created_at: '2023-06-13T21:26:05Z',
+          },
+          {
+            created_at: '2023-06-15T12:55:36Z',
+          },
+        ],
+        reviews: [
+          {
+            state: 'PENDING',
+          },
+          {
+            state: 'COMMENTED',
+            submitted_at: '2023-06-14T17:48:08Z',
+          },
+          {
+            state: 'COMMENTED',
+            submitted_at: '2023-06-16T17:48:08Z',
+          },
+        ],
+        currentDateTime: moment('2023-06-16T20:48:08Z'),
+        want: 'no',
+      },
+      {
+        reviewRequests: [
+          {
+            event: 'review_requested',
+            created_at: '2023-06-13T21:26:05Z',
+          },
+        ],
+        reviews: [
+          {
+            user: {
+              login: 'phuongnhat-nguyen-simplisafe',
+            },
+            state: 'PENDING',
+          },
+        ],
+        currentDateTime: moment('2023-06-13T22:48:08Z'),
+        want: '',
+      },
+      {
+        reviewRequests: [
+          {
+            event: 'review_requested',
+            created_at: '2023-06-13T21:26:05Z',
+          },
+        ],
+        reviews: [],
+        currentDateTime: today,
+        want: 'no',
+      },
+      {
+        reviewRequests: [
+          {
+            event: 'review_requested',
+            created_at: '2023-06-13T21:26:05Z',
+          },
+        ],
+        reviews: [],
+        currentDateTime: moment('2023-06-13T22:26:05Z'),
+        want: '',
+      },
+      {
+        reviewRequests: [
+          {
+            created_at: '2023-06-14T21:33:27Z',
+            requestedReviewer: {
+              name: 'camfam',
+            },
+          },
+        ],
+        reviews: [
+          {
+            submitted_at: '2023-06-15T13:14:46Z',
+            state: 'APPROVED',
+          },
+        ],
+        currentDateTime: today,
+        want: 'yes',
+      },
+      {
+        reviewRequests: [
+          {
+            created_at: '2023-06-22T14:48:17Z',
+            requestedReviewer: {
+              name: 'camfam',
+            },
+          },
+        ],
+        reviews: [
+          {
+            submitted_at: '2023-06-22T15:35:20Z',
+            state: 'COMMENTED',
+          },
+          {
+            submitted_at: '2023-06-22T18:44:01Z',
+            state: 'COMMENTED',
+          },
+          {
+            submitted_at: '2023-06-22T18:51:20Z',
+            state: 'COMMENTED',
+          },
+          {
+            submitted_at: '2023-06-23T15:08:03Z',
+            state: 'COMMENTED',
+          },
+          {
+            submitted_at: '2023-06-23T15:08:22Z',
+            state: 'COMMENTED',
+          },
+          {
+            submitted_at: '2023-06-23T15:08:29Z',
+            state: 'COMMENTED',
+          },
+          {
+            submitted_at: '2023-06-23T15:08:37Z',
+            state: 'COMMENTED',
+          },
+        ],
+        currentDateTime: today,
+        want: 'yes',
+      },
+      {
+        reviewRequests: [
+          {
+            created_at: '2023-06-22T13:33:37Z',
+            requestedReviewer: {
+              name: 'camfam',
+            },
+          },
+          {
+            created_at: '2023-06-22T13:33:37Z',
+            requestedReviewer: {
+              name: 'cloud-ai',
+            },
+          },
+        ],
+        reviews: [
+          {
+            submitted_at: '2023-06-22T14:04:21Z',
+            state: 'APPROVED',
+          },
+        ],
+        currentDateTime: today,
+        want: 'yes',
+      },
+      {
+        reviewRequests: [
+          {
+            created_at: '2023-06-15T17:10:03Z',
+            requestedReviewer: {
+              name: 'camfam',
+            },
+          },
+        ],
+        reviews: [
+          {
+            submitted_at: '2023-06-16T19:42:55Z',
+            state: 'COMMENTED',
+          },
+          {
+            submitted_at: '2023-06-20T13:41:00Z',
+            state: 'COMMENTED',
+          },
+          {
+            submitted_at: '2023-06-20T13:41:12Z',
+            state: 'COMMENTED',
+          },
+          {
+            submitted_at: '2023-06-20T13:43:51Z',
+            state: 'COMMENTED',
+          },
+          {
+            submitted_at: '2023-06-20T13:44:29Z',
+            state: 'COMMENTED',
+          },
+          {
+            submitted_at: '2023-06-20T19:43:21Z',
+            state: 'APPROVED',
+          },
+        ],
+        currentDateTime: today,
+        want: 'no',
+      },
+      // Falls on a weekend
+      {
+        reviewRequests: [
+          {
+            created_at: '2023-06-23T20:28:20Z',
+            requestedReviewer: {
+              name: 'camfam',
+            },
+          },
+        ],
+        reviews: [],
+        currentDateTime: moment('2023-06-26T00:28:20Z'),
+        want: '',
+      },
+      // Falls on a weekend
+      {
+        reviewRequests: [
+          {
+            created_at: '2023-06-23T20:28:20Z',
+            requestedReviewer: {
+              name: 'camfam',
+            },
+          },
+        ],
+        reviews: [],
+        currentDateTime: moment('2023-06-27T00:28:20Z'),
+        want: 'no',
+      },
+    ];
+
+    for (const [index, testCase] of Object.entries(testCases)) {
+      const { reviewRequests, reviews, currentDateTime, want } = testCase;
+
+      const result = reviewedWithin24hrs(
+        reviewRequests,
+        reviews,
+        currentDateTime
+      );
+
+      if (result !== want) {
+        console.log(`Test case at index ${index} failed.`);
+      }
+
+      expect(result).toEqual(want);
+    }
   });
 });
