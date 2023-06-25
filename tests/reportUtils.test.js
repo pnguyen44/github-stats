@@ -1,6 +1,7 @@
 const {
   sortDataByField,
   reviewedWithin24hrs,
+  getDeadline,
 } = require('../src/utils/reportUtils');
 const moment = require('moment');
 
@@ -348,6 +349,32 @@ describe('Report utils tests', () => {
       }
 
       expect(result).toEqual(want);
+    }
+  });
+
+  it('Should correctly get the deadline date', () => {
+    const testCases = [
+      // handle weekend
+      {
+        date: '2023-06-23T20:28:20Z',
+        want: '2023-06-26T20:28:20Z',
+      },
+      // handle holidays
+      {
+        date: '2023-06-16T22:00:00Z',
+        want: '2023-06-20T22:00:00Z',
+      },
+      {
+        date: '2023-07-03T22:00:00Z',
+        want: '2023-07-05T22:00:00Z',
+      },
+    ];
+
+    for (const testCase of testCases) {
+      const { date, want } = testCase;
+
+      const result = getDeadline(date).toISOString();
+      expect(result).toEqual(moment(want).toISOString());
     }
   });
 });

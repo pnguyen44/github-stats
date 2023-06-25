@@ -1,4 +1,5 @@
 const moment = require('moment');
+const { HOLIDAYS } = require('../config');
 
 function formatDate(dateString) {
   const formattedDate = moment(dateString).format('YYYY-MM-DD h:mm:ss A');
@@ -43,14 +44,25 @@ function sortDataByField(data, field, sortDirection) {
 
 function getDeadline(date) {
   const dateMoment = moment(date);
+  const holidays = HOLIDAYS;
   const isFriday = dateMoment.format('dddd') === 'Friday';
-  let deadline;
-  if (isFriday) {
-    deadline = dateMoment.add(72, 'hours');
-  } else {
-    deadline = dateMoment.add(24, 'hours');
-  }
 
+  let days = 0;
+
+  if (isFriday) {
+    days = 3;
+  } else {
+    days = 1;
+  }
+  let deadline = dateMoment.add(days, 'days');
+
+  const isHoliday = (date) => {
+    return holidays.includes(moment(date).format('YYYY-MM-DD'));
+  };
+
+  while (isHoliday(deadline)) {
+    deadline.add(1, 'days');
+  }
   return deadline;
 }
 
@@ -117,4 +129,5 @@ module.exports = {
   sortDataByField,
   getRelativeDateRange,
   reviewedWithin24hrs,
+  getDeadline,
 };
