@@ -141,7 +141,7 @@ describe('Report utils tests', () => {
           },
         ],
         currentDateTime: moment('2023-06-16T20:48:08Z'),
-        want: 'no',
+        want: false,
       },
       {
         reviewRequests: [
@@ -170,7 +170,7 @@ describe('Report utils tests', () => {
         ],
         reviews: [],
         currentDateTime: today,
-        want: 'no',
+        want: false,
       },
       {
         reviewRequests: [
@@ -199,7 +199,7 @@ describe('Report utils tests', () => {
           },
         ],
         currentDateTime: today,
-        want: 'yes',
+        want: true,
       },
       {
         reviewRequests: [
@@ -241,7 +241,7 @@ describe('Report utils tests', () => {
           },
         ],
         currentDateTime: today,
-        want: 'yes',
+        want: true,
       },
       {
         reviewRequests: [
@@ -265,7 +265,7 @@ describe('Report utils tests', () => {
           },
         ],
         currentDateTime: today,
-        want: 'yes',
+        want: true,
       },
       {
         reviewRequests: [
@@ -303,7 +303,7 @@ describe('Report utils tests', () => {
           },
         ],
         currentDateTime: today,
-        want: 'no',
+        want: false,
       },
       // Falls on a weekend
       {
@@ -331,7 +331,7 @@ describe('Report utils tests', () => {
         ],
         reviews: [],
         currentDateTime: moment('2023-06-27T00:28:20Z'),
-        want: 'no',
+        want: false,
       },
     ];
 

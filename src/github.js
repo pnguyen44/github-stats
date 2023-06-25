@@ -97,12 +97,23 @@ class GitHub {
     return unique;
   }
 
-  async searchIssues({ repos, authors, state, startDate, endDate }) {
+  async searchIssues({ repos, authors, state, createdRange, updatedRange }) {
     console.log('Searching issues');
-    const r = repos.map((r) => `repo:${this.owner}/${r}`).join(' ');
+    const repo = repos.map((r) => `repo:${this.owner}/${r}`).join(' ');
     const s = state ? `state:${state}` : '';
     const author = authors.map((author) => `author:${author}`).join(' ');
-    const q = `${r} is:pr ${s} ${author} created:${startDate}..${endDate}`;
+    let created = '';
+    let updated = '';
+
+    if (createdRange?.start && createdRange?.end) {
+      created = `created:${createdRange?.start}..${createdRange?.end}`;
+    }
+
+    if (updatedRange?.start && updatedRange?.end) {
+      updated = `updated:${updatedRange?.start}..${updatedRange?.end}`;
+    }
+
+    const q = `${repo} is:pr ${s} ${author} ${created} ${updated}`;
 
     return await this._request('GET /search/issues?q=' + encodeURIComponent(q));
   }
@@ -214,37 +225,47 @@ class GitHub {
     const repos = await this.getAllReposForTeams(this.teams);
     let result = [];
 
-    const filterCallback = (d) => {
-      const { login } = d.user;
-      return teamMembers.includes(login);
+    const options = {
+      repos,
+      state,
+      authors: teamMembers,
     };
 
-    if (!startDate && !endDate && startDaysAgo <= 0) {
-      for (const repo of repos) {
-        const pullRequests = await this.getRepoPullRequests(
-          repo,
-          state,
-          filterCallback
-        );
-        result = result.concat(pullRequests);
-      }
-      return result;
+    if (startDate && endDate && startDaysAgo) {
+      throw new Error(
+        'Invalid combination of absolute and relative date range'
+      );
+    }
+
+    if ((startDate && !endDate) || (endDate && !startDate)) {
+      throw new Error('Absolute range require both start and end dates');
     }
 
     if (startDaysAgo > 0) {
       const { startDate: start, endDate: end } =
         getRelativeDateRange(startDaysAgo);
-      startDate = start;
-      endDate = end;
+
+      options.createdRange = {
+        start,
+        end,
+      };
+      options.updatedRange = {
+        start,
+        end,
+      };
     }
 
-    const options = {
-      repos,
-      startDate,
-      endDate,
-      state,
-      authors: teamMembers,
-    };
+    if (startDate && endDate) {
+      options.createdRange = {
+        start: startDate,
+        end: endDate,
+      };
+
+      options.updatedRange = {
+        start: startDate,
+        end: endDate,
+      };
+    }
 
     const data = await this.searchIssues(options);
     const items = data.map((d) => {

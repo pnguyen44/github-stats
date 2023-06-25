@@ -80,11 +80,9 @@ function reviewedWithin24hrs(reviewRequests, reviews, currentDateTime) {
     return '';
   }
 
-  const uniqueRequestsDates = Array.from(
-    new Set(reviewRequests.map((request) => request.created_at))
-  );
-
-  // console.log('uniqueRequestsDates', uniqueRequestsDates);
+  const uniqueRequestsDates = [
+    ...new Set(reviewRequests.map((request) => request.created_at)),
+  ];
 
   for (let i = 0; i < uniqueRequestsDates.length; i++) {
     const current = moment(uniqueRequestsDates[i]);
@@ -97,17 +95,13 @@ function reviewedWithin24hrs(reviewRequests, reviews, currentDateTime) {
         return moment(reviews.submitted_at).isAfter(current);
       });
     }
-    // console.log('relevant reviews', relevantReviews);
-    // console.log('deadline', deadline.toISOString());
 
     const doneWithin24hr = relevantReviews.filter((review) => {
       return moment(review.submitted_at).isSameOrBefore(deadline);
     });
 
-    // console.log('doneWithin24hr', doneWithin24hr);
-
     if (relevantReviews && doneWithin24hr.length === 0) {
-      return 'no';
+      return false;
     }
 
     const lastRequest = i === uniqueRequestsDates.length - 1;
@@ -117,7 +111,7 @@ function reviewedWithin24hrs(reviewRequests, reviews, currentDateTime) {
       relevantReviews.length > 0 &&
       doneWithin24hr.length > 0
     ) {
-      return 'yes';
+      return true;
     }
   }
 
