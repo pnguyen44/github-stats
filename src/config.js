@@ -2,7 +2,6 @@ require('dotenv').config();
 
 const OWNER = 'simplisafe';
 const TEAMS = ['camfam', 'cloud-ai'];
-const PER_PAGE = 20;
 const MAX_PAGE = 1;
 const TOKEN = process.env.TOKEN;
 
@@ -24,4 +23,4 @@ const HOLIDAYS = [
   '2023-12-25',
 ];
 
-module.exports = { OWNER, TEAMS, PER_PAGE, TOKEN, MAX_PAGE, HOLIDAYS };
+module.exports = { OWNER, TEAMS, TOKEN, MAX_PAGE, HOLIDAYS };

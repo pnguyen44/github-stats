@@ -3,14 +3,14 @@ const moment = require('moment');
 
 const {
   formatDate,
-  getRelativeDateRange,
+  sortDataByField,
   reviewedWithin24hrs,
 } = require('./utils/reportUtils');
 const { PR_STATE } = require('./constant');
 const { TEAMS } = require('./config');
 
 class GitHub {
-  constructor({ owner, perPage, token, teams }) {
+  constructor({ owner, token, teams }) {
     this.octokit = new Octokit({
       auth: token,
     });
@@ -20,17 +20,11 @@ class GitHub {
     };
 
     this.owner = owner;
-    this.perPage = perPage;
     this.teams = teams;
   }
 
   async _request(endpoint, parameters) {
     try {
-      const options = {
-        ...parameters,
-        per_page: this.perPage,
-        headers: this.headers,
-      };
       return await this.octokit.paginate(endpoint, parameters);
     } catch (err) {
       console.error(`Error on ${endpoint}: ${err}`);
@@ -264,7 +258,7 @@ class GitHub {
       });
       result = result.concat(this._parsePullRequestResponse(filtered));
     }
-    return result;
+    return sortDataByField(result, 'created_at', 'asc');
   }
 
   async get24hReviewStats({ state, startDate, endDate }) {

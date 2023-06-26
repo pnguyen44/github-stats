@@ -1,8 +1,6 @@
 const { exportToExcel } = require('../src/utils/exportUtils');
-const {
-  sortDataByField,
-  resolveDateRange,
-} = require('../src/utils/reportUtils');
+const moment = require('moment');
+const { resolveDateRange } = require('../src/utils/reportUtils');
 const { PR_STATE } = require('./constant');
 
 class Report {
@@ -10,8 +8,8 @@ class Report {
     this.gh = gh;
   }
 
-  _exportToExcel(name, sortedData) {
-    exportToExcel(name, sortedData)
+  _exportToExcel(fileName, data) {
+    exportToExcel(fileName, data)
       .then(() => {
         console.log('Data exported to Excel successfully');
       })
@@ -29,8 +27,7 @@ class Report {
           return;
         }
         // console.log('__', data);
-        const sortedData = sortDataByField(data, 'created_at', 'asc');
-        this._exportToExcel(name, sortedData);
+        this._exportToExcel(name, [{ sheetName: 'raw', data }]);
       })
       .catch((err) => {
         console.log('Error in getting all pull request', err);
@@ -54,20 +51,21 @@ class Report {
           return;
         }
         console.log('__', data);
-        const excelData = sortDataByField(data, 'created_at', 'asc');
         const summary = this._get24hReviewSummary(data, {
           startDate: start,
           endDate: end,
         });
-        excelData.push(['']);
-        excelData.push(['']);
-        excelData.push([summary]);
-        this._exportToExcel(name, excelData);
+
+        this._exportToExcel(name, [
+          { sheetName: 'raw', data },
+          { sheetName: 'summary', data: [summary] },
+        ]);
       })
       .catch((err) => {
         console.log('Error in getting all pull request', err);
       });
   }
+
   _get24hReviewSummary(data, { startDate, endDate }) {
     const totalCreated = data.length;
     const totalOpen = data.filter((d) => d.state === PR_STATE.open).length;
@@ -80,17 +78,23 @@ class Report {
       100
     ).toFixed(2);
 
-    let str = '';
+    let start = startDate;
+    let end = endDate;
 
-    if (startDate && endDate) {
-      str += `Range: ${startDate} - ${endDate}\n`;
+    if (!start || !start) {
+      start = moment(data[0].created_at).format('YYYY-MM-DD');
+      end = moment(data[data.length - 1].created_at).format('YYYY-MM-DD');
     }
 
-    str +=
-      `Total created: ${totalCreated} | Total open: ${totalOpen} | Total closed: ${totalClosed}\n` +
-      `Total not reviewed within 24hrs: ${notReviewedWithin24hr} | Percentage not reviewed within 24hrs: ${percentageNotReviewWithin24hr}%`;
-
-    return str;
+    return {
+      start_date: start,
+      end_date: end,
+      total_created: totalCreated,
+      total_open: totalOpen,
+      total_closed: totalClosed,
+      not_reviewed_within_24h: notReviewedWithin24hr,
+      percentage_not_reviewed_within_24h: `${percentageNotReviewWithin24hr}%`,
+    };
   }
 }
 

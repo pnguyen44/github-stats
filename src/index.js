@@ -2,11 +2,10 @@ const { Report } = require('./report');
 const { GitHub } = require('./github');
 const { PR_STATE } = require('./constant');
 
-const { TEAMS, OWNER, PER_PAGE, TOKEN } = require('./config');
+const { TEAMS, OWNER, TOKEN } = require('./config');
 
 const config = {
   owner: OWNER,
-  perPage: PER_PAGE,
   token: TOKEN,
   teams: TEAMS,
 };
@@ -15,13 +14,13 @@ const gh = new GitHub(config);
 
 const report = new Report(gh);
 
-report.createPullRequestsReport('Open PRs', {
+report.create24hReviewStats('PRs', {
   state: PR_STATE.open,
 });
 
 // using relative date range
-// const startDaysAgo = 10;
-// report.createPullRequestsReport(`PR from last ${startDaysAgo} days`, {
+// const startDaysAgo = 4;
+// report.create24hReviewStats(`PR from last ${startDaysAgo} days`, {
 //   startDaysAgo,
 // });
 
