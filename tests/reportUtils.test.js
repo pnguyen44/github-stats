@@ -1,9 +1,11 @@
-const {
+import {
   sortDataByField,
   reviewedWithin24hrs,
   getDeadline,
-} = require('../src/utils/reportUtils');
-const moment = require('moment');
+} from '../src/utils/reportUtils';
+import moment from 'moment';
+
+import { describe, it, expect } from '@jest/globals';
 
 const data = [
   {

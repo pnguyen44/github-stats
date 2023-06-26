@@ -1,6 +1,6 @@
-const ExcelJS = require('exceljs');
+import ExcelJS from 'exceljs';
 
-async function exportToExcel(filename, sheetsData) {
+export async function exportToExcel(filename, sheetsData) {
   const workbook = new ExcelJS.Workbook();
 
   for (const { sheetName, data } of sheetsData) {
@@ -25,5 +25,3 @@ async function exportToExcel(filename, sheetsData) {
 
   await workbook.xlsx.writeFile(fileName);
 }
-
-module.exports = { exportToExcel };

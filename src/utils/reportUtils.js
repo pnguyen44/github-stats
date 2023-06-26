@@ -1,12 +1,12 @@
-const moment = require('moment');
-const { HOLIDAYS } = require('../config');
+import moment from 'moment';
+import { HOLIDAYS } from '../config';
 
-function formatDate(dateString) {
+export function formatDate(dateString) {
   const formattedDate = moment(dateString).format('YYYY-MM-DD h:mm:ss A');
   return formattedDate;
 }
 
-function getRelativeDateRange(daysAgo) {
+export function getRelativeDateRange(daysAgo) {
   const today = moment().format('YYYY-MM-DD');
   const startDate = moment().subtract(daysAgo, 'days').format('YYYY-MM-DD');
   console.log('start', startDate, 'end', today);
@@ -14,11 +14,11 @@ function getRelativeDateRange(daysAgo) {
   return { startDate, endDate: today };
 }
 
-function isStringConvertibleToDate(value) {
+export function isStringConvertibleToDate(value) {
   return !isNaN(Date.parse(value));
 }
 
-function sortDataByField(data, field, sortDirection) {
+export function sortDataByField(data, field, sortDirection) {
   const sortedArray = data.slice().sort((a, b) => {
     let aVal = a[field];
     let bVal = b[field];
@@ -42,7 +42,7 @@ function sortDataByField(data, field, sortDirection) {
   return sortedArray;
 }
 
-function getDeadline(date) {
+export function getDeadline(date) {
   const dateMoment = moment(date);
   const holidays = HOLIDAYS;
   const isFriday = dateMoment.format('dddd') === 'Friday';
@@ -66,7 +66,7 @@ function getDeadline(date) {
   return deadline;
 }
 
-function reviewedWithin24hrs(reviewRequests, reviews, currentDateTime) {
+export function reviewedWithin24hrs(reviewRequests, reviews, currentDateTime) {
   const filteredReviews = reviews.filter((r) => r.submitted_at);
 
   if (reviewRequests.length === 0) {
@@ -118,7 +118,7 @@ function reviewedWithin24hrs(reviewRequests, reviews, currentDateTime) {
   return '';
 }
 
-function resolveDateRange({ startDate, endDate, startDaysAgo }) {
+export function resolveDateRange({ startDate, endDate, startDaysAgo }) {
   if (startDate && endDate && startDaysAgo) {
     throw new Error('Invalid combination of absolute and relative date range');
   }
@@ -137,12 +137,3 @@ function resolveDateRange({ startDate, endDate, startDaysAgo }) {
 
   return {};
 }
-
-module.exports = {
-  formatDate,
-  sortDataByField,
-  getRelativeDateRange,
-  reviewedWithin24hrs,
-  getDeadline,
-  resolveDateRange,
-};

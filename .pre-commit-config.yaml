@@ -16,6 +16,6 @@ repos:
     hooks:
       - id: eslint
         name: eslint
-        entry: eslint --config .eslintrc.js --max-warnings=0
+        entry: eslint --config .eslintrc.json --max-warnings=0
         files: \.(js|jsx|ts|tsx)$
         types: [file]

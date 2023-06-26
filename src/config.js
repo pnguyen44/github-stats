@@ -1,15 +1,15 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const OWNER = 'simplisafe';
-const TEAMS = ['camfam', 'cloud-ai'];
-const MAX_PAGE = 1;
-const TOKEN = process.env.TOKEN;
+export const OWNER = 'simplisafe';
+export const TEAMS = ['camfam', 'cloud-ai'];
+export const TOKEN = process.env.TOKEN;
 
 if (TOKEN == '') {
   console.error('Missing token in .env');
 }
 
-const HOLIDAYS = [
+export const HOLIDAYS = [
   '2023-01-02',
   '2023-02-20',
   '2023-03-17', // recharge day
@@ -22,5 +22,3 @@ const HOLIDAYS = [
   '2023-11-23',
   '2023-12-25',
 ];
-
-module.exports = { OWNER, TEAMS, TOKEN, MAX_PAGE, HOLIDAYS };

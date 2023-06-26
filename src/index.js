@@ -1,8 +1,8 @@
-const { Report } = require('./report');
-const { GitHub } = require('./github');
-const { PR_STATE } = require('./constant');
+import { Report } from './report';
+import { GitHub } from './github';
+import { PR_STATE } from './constant';
 
-const { TEAMS, OWNER, TOKEN } = require('./config');
+import { TEAMS, OWNER, TOKEN } from './config';
 
 const config = {
   owner: OWNER,

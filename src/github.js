@@ -1,15 +1,14 @@
-const { Octokit } = require('@octokit/rest');
-const moment = require('moment');
+import { Octokit } from '@octokit/rest';
+import moment from 'moment';
 
-const {
+import {
   formatDate,
   sortDataByField,
   reviewedWithin24hrs,
-} = require('./utils/reportUtils');
-const { PR_STATE } = require('./constant');
-const { TEAMS } = require('./config');
+} from './utils/reportUtils';
+import { PR_STATE } from './constant';
 
-class GitHub {
+export class GitHub {
   constructor({ owner, token, teams }) {
     this.octokit = new Octokit({
       auth: token,
@@ -293,7 +292,3 @@ class GitHub {
     return prs;
   }
 }
-
-module.exports = {
-  GitHub,
-};

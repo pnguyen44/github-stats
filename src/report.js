@@ -1,9 +1,9 @@
-const { exportToExcel } = require('../src/utils/exportUtils');
-const moment = require('moment');
-const { resolveDateRange } = require('../src/utils/reportUtils');
-const { PR_STATE } = require('./constant');
+import { exportToExcel } from '../src/utils/exportUtils';
+import moment from 'moment';
+import { resolveDateRange } from '../src/utils/reportUtils';
+import { PR_STATE } from './constant';
 
-class Report {
+export class Report {
   constructor(gh) {
     this.gh = gh;
   }
@@ -81,9 +81,13 @@ class Report {
     let start = startDate;
     let end = endDate;
 
+    const dateFormat = 'YYYY-MM-DDTHH:mm:ss[Z]';
+
     if (!start || !start) {
-      start = moment(data[0].created_at).format('YYYY-MM-DD');
-      end = moment(data[data.length - 1].created_at).format('YYYY-MM-DD');
+      start = moment(data[0].created_at, dateFormat).format('YYYY-MM-DD');
+      end = moment(data[data.length - 1].created_at, dateFormat).format(
+        'YYYY-MM-DD'
+      );
     }
 
     return {
@@ -97,5 +101,3 @@ class Report {
     };
   }
 }
-
-module.exports = { Report };
