@@ -27,7 +27,7 @@ export class Report {
           return;
         }
         // console.log('__', data);
-        this._exportToExcel(name, [{ sheetName: 'raw', data }]);
+        this._exportToExcel(name, [{ sheetName: 'data', data }]);
       })
       .catch((err) => {
         console.log('Error in getting all pull request', err);
@@ -57,7 +57,7 @@ export class Report {
         });
 
         this._exportToExcel(name, [
-          { sheetName: 'raw', data },
+          { sheetName: 'data', data },
           { sheetName: 'summary', data: [summary] },
         ]);
       })
