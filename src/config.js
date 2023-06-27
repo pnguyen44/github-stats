@@ -4,6 +4,7 @@ dotenv.config();
 export const OWNER = 'simplisafe';
 export const TEAMS = ['camfam', 'cloud-ai'];
 export const TOKEN = process.env.TOKEN;
+export const DESIRED_DATE_FORMAT = 'YYYY-MM-DD h:mm:ss A';
 
 if (TOKEN == '') {
   console.error('Missing token in .env');

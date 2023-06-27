@@ -1,8 +1,8 @@
 import moment from 'moment';
-import { HOLIDAYS } from '../config';
+import { HOLIDAYS, DESIRED_DATE_FORMAT } from '../config';
 
 export function formatDate(dateString) {
-  const formattedDate = moment(dateString).format('YYYY-MM-DD h:mm:ss A');
+  const formattedDate = moment(dateString).format(DESIRED_DATE_FORMAT);
   return formattedDate;
 }
 
@@ -136,4 +136,36 @@ export function resolveDateRange({ startDate, endDate, startDaysAgo }) {
   }
 
   return {};
+}
+
+export function bucketDataByInterval({
+  data,
+  startDate,
+  endDate,
+  daysInterval,
+}) {
+  const dateFormat = DESIRED_DATE_FORMAT;
+  const buckets = [];
+  let currentDate = moment(startDate, dateFormat);
+
+  while (currentDate.isSameOrBefore(moment(endDate, dateFormat))) {
+    const end = moment(currentDate, dateFormat)
+      .add(daysInterval - 1, 'days')
+      .endOf('day');
+    const relevantData = data.filter((item) =>
+      moment(item.created_at, dateFormat).isBetween(
+        currentDate,
+        end,
+        undefined,
+        '[]'
+      )
+    );
+    buckets.push({
+      start: currentDate.format(dateFormat),
+      end: end.format(dateFormat),
+      data: relevantData,
+    });
+    currentDate = end.add(1, 'days').startOf('day');
+  }
+  return buckets;
 }

@@ -23,10 +23,15 @@ export class GitHub {
   }
 
   async _request(endpoint, parameters) {
+    const options = {
+      ...parameters,
+      per_page: 100,
+    };
+
     try {
-      return await this.octokit.paginate(endpoint, parameters);
+      return await this.octokit.paginate(endpoint, options);
     } catch (err) {
-      console.error(`Error on ${endpoint}: ${err}`);
+      throw new Error(`Error on ${endpoint}. Error: ${err}`);
     }
   }
 

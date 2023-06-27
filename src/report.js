@@ -1,6 +1,8 @@
 import { exportToExcel } from '../src/utils/exportUtils';
-import moment from 'moment';
-import { resolveDateRange } from '../src/utils/reportUtils';
+import {
+  resolveDateRange,
+  bucketDataByInterval,
+} from '../src/utils/reportUtils';
 import { PR_STATE } from './constant';
 
 export class Report {
@@ -26,39 +28,52 @@ export class Report {
           console.log('No results to report');
           return;
         }
-        // console.log('__', data);
         this._exportToExcel(name, [{ sheetName: 'data', data }]);
       })
       .catch((err) => {
-        console.log('Error in getting all pull request', err);
+        console.log('Error in getting all pull request:', err);
       });
   }
 
-  create24hReviewStats(name, { state, startDate, endDate, startDaysAgo }) {
+  create24hReviewStats(
+    name,
+    { state, startDate, endDate, startDaysAgo, daysInterval }
+  ) {
     const dateRange = resolveDateRange({
       startDate,
       endDate,
       startDaysAgo,
     });
+
+    if (Object.keys(dateRange).length === 0) {
+      throw new Error('Require absolute or relative date range');
+    }
+
     const start = dateRange?.startDate;
     const end = dateRange?.endDate;
 
     this.gh
-      .get24hReviewStats({ state, startDate: start, endDate: end })
+      .get24hReviewStats({
+        state,
+        startDate: start,
+        endDate: end,
+      })
       .then((data) => {
         if (!data.length) {
           console.log('No results to report');
           return;
         }
-        console.log('__', data);
-        const summary = this._get24hReviewSummary(data, {
+
+        const summaries = this._get24hReviewSummaryByInterval({
+          data,
           startDate: start,
           endDate: end,
+          daysInterval,
         });
 
         this._exportToExcel(name, [
           { sheetName: 'data', data },
-          { sheetName: 'summary', data: [summary] },
+          { sheetName: 'summary', data: summaries },
         ]);
       })
       .catch((err) => {
@@ -66,7 +81,7 @@ export class Report {
       });
   }
 
-  _get24hReviewSummary(data, { startDate, endDate }) {
+  _get24hReviewSummary(data, startDate, endDate) {
     const totalCreated = data.length;
     const totalOpen = data.filter((d) => d.state === PR_STATE.open).length;
     const totalClosed = data.filter((d) => d.state === PR_STATE.closed).length;
@@ -81,15 +96,6 @@ export class Report {
     let start = startDate;
     let end = endDate;
 
-    const dateFormat = 'YYYY-MM-DDTHH:mm:ss[Z]';
-
-    if (!start || !start) {
-      start = moment(data[0].created_at, dateFormat).format('YYYY-MM-DD');
-      end = moment(data[data.length - 1].created_at, dateFormat).format(
-        'YYYY-MM-DD'
-      );
-    }
-
     return {
       start_date: start,
       end_date: end,
@@ -99,5 +105,33 @@ export class Report {
       not_reviewed_within_24h: notReviewedWithin24hr,
       percentage_not_reviewed_within_24h: `${percentageNotReviewWithin24hr}%`,
     };
+  }
+
+  _get24hReviewSummaryByInterval({ data, startDate, endDate, daysInterval }) {
+    const result = [];
+    let buckets;
+
+    if (!daysInterval || daysInterval <= 0) {
+      buckets = [
+        {
+          start: startDate,
+          end: endDate,
+          data,
+        },
+      ];
+    } else {
+      buckets = bucketDataByInterval({
+        data,
+        startDate,
+        endDate,
+        daysInterval,
+      });
+    }
+
+    for (const { start, end, data: d } of buckets) {
+      const summary = this._get24hReviewSummary(d, start, end);
+      result.push(summary);
+    }
+    return result;
   }
 }

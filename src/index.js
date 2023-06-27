@@ -26,6 +26,7 @@ report.create24hReviewStats('PRs', {
 
 // using a absolute date range
 // report.create24hReviewStats('PRs', {
-//   startDate: '2023-06-07',
-//   endDate: '2023-06-21',
+//   startDate: '2023-05-10',
+//   endDate: '2023-06-20',
+//   daysInterval: 14,
 // });

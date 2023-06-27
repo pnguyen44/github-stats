@@ -2,6 +2,7 @@ import {
   sortDataByField,
   reviewedWithin24hrs,
   getDeadline,
+  bucketDataByInterval,
 } from '../src/utils/reportUtils';
 import moment from 'moment';
 
@@ -378,5 +379,117 @@ describe('Report utils tests', () => {
       const result = getDeadline(date).toISOString();
       expect(result).toEqual(moment(want).toISOString());
     }
+  });
+
+  it('Should correctly bucket data', () => {
+    const data = [
+      {
+        created_at: '2023-06-01 9:26:06 AM',
+        data: [],
+      },
+      {
+        created_at: '2023-06-01 2:04:11 PM',
+        data: [],
+      },
+      {
+        created_at: '2023-06-02 4:31:40 PM',
+        data: [],
+      },
+      {
+        created_at: '2023-06-03 9:26:06 AM',
+        data: [],
+      },
+      {
+        created_at: '2023-06-07 9:04:26 AM',
+        data: [],
+      },
+      {
+        created_at: '2023-06-09 9:27:24 AM',
+        data: [],
+      },
+      {
+        created_at: '2023-06-09 10:11:15 AM',
+        data: [],
+      },
+      {
+        created_at: '2023-06-09 3:02:30 PM',
+        data: [],
+      },
+      {
+        created_at: '2023-06-10 3:13:13 PM',
+        data: [],
+      },
+      {
+        created_at: '2023-06-11 3:25:44 PM',
+        data: [],
+      },
+      {
+        created_at: '2023-06-20 3:34:44 PM',
+        data: [],
+      },
+      {
+        created_at: '2023-06-22 3:41:39 PM',
+        data: [],
+      },
+      {
+        created_at: '2023-06-22 3:56:29 PM',
+        data: [],
+      },
+      {
+        created_at: '2023-06-30 3:59:40 PM',
+        data: [],
+      },
+      {
+        created_at: '2023-07-01 1:21:57 PM',
+        data: [],
+      },
+    ];
+    const want = [
+      {
+        start: '2023-05-10 12:00:00 AM',
+        end: '2023-05-23 11:59:59 PM',
+        data: [],
+      },
+      {
+        start: '2023-05-24 12:00:00 AM',
+        end: '2023-06-06 11:59:59 PM',
+        data: [
+          { created_at: '2023-06-01 9:26:06 AM', data: [] },
+          { created_at: '2023-06-01 2:04:11 PM', data: [] },
+          { created_at: '2023-06-02 4:31:40 PM', data: [] },
+          { created_at: '2023-06-03 9:26:06 AM', data: [] },
+        ],
+      },
+      {
+        start: '2023-06-07 12:00:00 AM',
+        end: '2023-06-20 11:59:59 PM',
+        data: [
+          { created_at: '2023-06-07 9:04:26 AM', data: [] },
+          { created_at: '2023-06-09 9:27:24 AM', data: [] },
+          { created_at: '2023-06-09 10:11:15 AM', data: [] },
+          { created_at: '2023-06-09 3:02:30 PM', data: [] },
+          { created_at: '2023-06-10 3:13:13 PM', data: [] },
+          { created_at: '2023-06-11 3:25:44 PM', data: [] },
+          { created_at: '2023-06-20 3:34:44 PM', data: [] },
+        ],
+      },
+      {
+        start: '2023-06-21 12:00:00 AM',
+        end: '2023-07-04 11:59:59 PM',
+        data: [
+          { created_at: '2023-06-22 3:41:39 PM', data: [] },
+          { created_at: '2023-06-22 3:56:29 PM', data: [] },
+          { created_at: '2023-06-30 3:59:40 PM', data: [] },
+          { created_at: '2023-07-01 1:21:57 PM', data: [] },
+        ],
+      },
+    ];
+    const result = bucketDataByInterval({
+      data,
+      startDate: '2023-05-10',
+      endDate: '2023-06-21',
+      daysInterval: 14,
+    });
+    expect(result).toEqual(want);
   });
 });
