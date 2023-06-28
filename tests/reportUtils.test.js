@@ -487,7 +487,7 @@ describe('Report utils tests', () => {
     const result = bucketDataByInterval({
       data,
       startDate: '2023-05-10',
-      endDate: '2023-06-21',
+      endDate: '2023-07-01',
       daysInterval: 14,
     });
     expect(result).toEqual(want);

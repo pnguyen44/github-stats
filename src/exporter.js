@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs';
 
-export class Export {
+export class Exporter {
   async _exportToExcel(filename, sheetsData) {
     const workbook = new ExcelJS.Workbook();
 
@@ -24,7 +24,7 @@ export class Export {
     await workbook.xlsx.writeFile(fileName);
   }
 
-  toExcel(fileName, data) {
+  exportToExcel(fileName, data) {
     this._exportToExcel(fileName, data)
       .then(() => {
         console.log('Data exported to Excel successfully');

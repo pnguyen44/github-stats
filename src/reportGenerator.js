@@ -1,14 +1,11 @@
-import { Export } from '../src/utils/exportUtils';
-import {
-  resolveDateRange,
-  bucketDataByInterval,
-} from '../src/utils/reportUtils';
+import { resolveDateRange, bucketDataByInterval } from './utils/reportUtils';
 import { PR_STATE } from './constant';
 
-export class Report {
-  constructor(gh) {
-    this.gh = gh;
-    this.export = new Export();
+export class ReportGenerator {
+  constructor(github, stats, exporter) {
+    this.gh = github;
+    this.stats = stats;
+    this.exporter = exporter;
   }
 
   createPullRequestsReport(name, { state, startDate, endDate, startDaysAgo }) {
@@ -19,7 +16,7 @@ export class Report {
           console.log('No results to report');
           return;
         }
-        this.export.toExcel(name, [{ sheetName: 'data', data }]);
+        this.exporter.exportToExcel(name, [{ sheetName: 'data', data }]);
       })
       .catch((err) => {
         throw new Error(`Error in creating pull requests report: ${err}`);
@@ -43,7 +40,7 @@ export class Report {
     const start = dateRange?.startDate;
     const end = dateRange?.endDate;
 
-    this.gh
+    this.stats
       .get24hReviewStats({
         state,
         startDate: start,
@@ -61,13 +58,13 @@ export class Report {
           daysInterval,
         });
 
-        this.export.toExcel(name, [
+        this.exporter.exportToExcel(name, [
           { sheetName: 'data', data },
           { sheetName: 'summary', data: summaries },
         ]);
       })
       .catch((err) => {
-        throw Error(`Error in creating 24h review stats report: ${err}`);
+        throw new Error(`Error in creating 24h review stats report: ${err}`);
       });
   }
 

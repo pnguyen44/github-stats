@@ -1,11 +1,6 @@
 import { Octokit } from '@octokit/rest';
-import moment from 'moment';
 
-import {
-  formatDate,
-  sortDataByField,
-  reviewedWithin24hrs,
-} from './utils/reportUtils';
+import { formatDate, sortDataByField } from './utils/reportUtils';
 import { PR_STATE } from './constant';
 
 export class GitHub {
@@ -162,6 +157,7 @@ export class GitHub {
 
     return this._parsePullRequestResponse(result);
   }
+
   _parsePullRequestResponse(data) {
     return data.map((d) => {
       const {
@@ -271,38 +267,5 @@ export class GitHub {
       result = result.concat(this._parsePullRequestResponse(filtered));
     }
     return sortDataByField(result, 'created_at', 'asc');
-  }
-
-  async get24hReviewStats({ state, startDate, endDate }) {
-    const prs = await this.getTeamsPullRequests({
-      state,
-      startDate,
-      endDate,
-    });
-
-    for (const pr of prs) {
-      const { html_url, repo } = pr;
-      const pullNumber = html_url.split('/').pop();
-      // get issue events
-      const issueEvents = await this.getIssueEvents(repo, pullNumber);
-
-      const reviewRequests = issueEvents.filter(
-        (event) => event.event === 'review_requested'
-      );
-
-      // get reviews
-      const reviews = await this.getReviews(repo, pullNumber);
-
-      const doneWithin24hr = reviewedWithin24hrs(
-        reviewRequests,
-        reviews,
-        moment()
-      );
-
-      pr.review_requested = reviewRequests.length > 0;
-      pr.reviewed_within_24_hours = doneWithin24hr;
-    }
-
-    return prs;
   }
 }
