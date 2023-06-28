@@ -19,17 +19,18 @@ const reportGenerator = new ReportGenerator(gh, stats, exporter);
 
 // using relative date range
 // const startDaysAgo = 14;
-// reportGenerator.create24hReviewStats(`PR from last ${startDaysAgo} days`, {
+// reportGenerator.create24hReviewStatsReport(`PR from last ${startDaysAgo} days`, {
 //   startDaysAgo,
 // });
 
 // using a absolute date range
-// reportGenerator.create24hReviewStats('PRs', {
+// reportGenerator.create24hReviewStatsReport('PRs', {
 //   startDate: '2023-05-10',
 //   endDate: '2023-06-20',
 //   daysInterval: 14,
 // });
 
-reportGenerator.createPullRequestsReport('PRs', {
+reportGenerator.create24hReviewStatsReport('PRs', {
   state: PR_STATE.open,
+  startDaysAgo: 10,
 });

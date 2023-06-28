@@ -8,9 +8,29 @@ export class ReportGenerator {
     this.exporter = exporter;
   }
 
+  _resolveDateRange(startDate, endDate, startDaysAgo) {
+    const dateRange = resolveDateRange({
+      startDate,
+      endDate,
+      startDaysAgo,
+    });
+
+    if (Object.keys(dateRange).length === 0) {
+      throw new Error('Require absolute or relative date range');
+    }
+
+    return dateRange;
+  }
+
   createPullRequestsReport(name, { state, startDate, endDate, startDaysAgo }) {
-    this.gh
-      .getTeamsPullRequests({ state, startDate, endDate, startDaysAgo })
+    const { startDate: start, endDate: end } = this._resolveDateRange(
+      startDate,
+      endDate,
+      startDaysAgo
+    );
+
+    this.stats
+      .getTeamsPullRequest({ state, startDate: start, endDate: end })
       .then((data) => {
         if (!data.length) {
           console.log('No results to report');
@@ -23,22 +43,15 @@ export class ReportGenerator {
       });
   }
 
-  create24hReviewStats(
+  create24hReviewStatsReport(
     name,
     { state, startDate, endDate, startDaysAgo, daysInterval }
   ) {
-    const dateRange = resolveDateRange({
+    const { startDate: start, endDate: end } = this._resolveDateRange(
       startDate,
       endDate,
-      startDaysAgo,
-    });
-
-    if (Object.keys(dateRange).length === 0) {
-      throw new Error('Require absolute or relative date range');
-    }
-
-    const start = dateRange?.startDate;
-    const end = dateRange?.endDate;
+      startDaysAgo
+    );
 
     this.stats
       .get24hReviewStats({
@@ -121,5 +134,20 @@ export class ReportGenerator {
       result.push(summary);
     }
     return result;
+  }
+
+  createDependabotReport(name, { state, startDate, endDate, startDaysAgo }) {
+    this.stats
+      .getDependabotPRs({ state, startDate, endDate, startDaysAgo })
+      .then((data) => {
+        if (!data.length) {
+          console.log('No results to report');
+          return;
+        }
+        this.exporter.exportToExcel(name, [{ sheetName: 'data', data }]);
+      })
+      .catch((err) => {
+        throw new Error(`Error in creating dependabot report: ${err}`);
+      });
   }
 }

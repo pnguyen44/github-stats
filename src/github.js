@@ -227,7 +227,7 @@ export class GitHub {
     );
   }
 
-  async getTeamsPullRequests({ state, startDate, endDate }) {
+  async getPullRequests({ state, startDate, endDate, teamMembers }) {
     console.log('Getting pull requests');
     // Prevent request for closed PRs with no date range
     if ((!state || state === PR_STATE.closed) && (!startDate || !endDate)) {
@@ -236,7 +236,6 @@ export class GitHub {
       );
     }
 
-    const teamMembers = await this.getAllTeamMembers();
     const repos = await this.getAllReposForTeams(this.teams);
     let result = [];
 
