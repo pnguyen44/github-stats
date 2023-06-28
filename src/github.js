@@ -92,23 +92,37 @@ export class GitHub {
 
   async searchIssues({ repos, authors, state, createdRange, updatedRange }) {
     console.log('Searching issues');
-    const repo = repos.map((r) => `repo:${this.owner}/${r}`).join(' ');
-    const s = state ? `state:${state}` : '';
-    const author = authors.map((author) => `author:${author}`).join(' ');
-    let created = '';
-    let updated = '';
+    let repoGroups = [];
 
-    if (createdRange?.start && createdRange?.end) {
-      created = `created:${createdRange?.start}..${createdRange?.end}`;
+    if (repos.length <= 50) {
+      repoGroups = repos;
+    } else {
+      repoGroups = [repos.slice(0, 50), repos.slice(50)];
     }
 
-    if (updatedRange?.start && updatedRange?.end) {
-      updated = `updated:${updatedRange?.start}..${updatedRange?.end}`;
-    }
+    const promises = repoGroups.map(async (group) => {
+      const repo = group.map((r) => `repo:${this.owner}/${r}`).join(' ');
+      const s = state ? `state:${state}` : '';
+      const author = authors.map((author) => `author:${author}`).join(' ');
+      let created = '';
+      let updated = '';
 
-    const q = `${repo} is:pr ${s} ${author} ${created} ${updated}`;
+      if (createdRange?.start && createdRange?.end) {
+        created = `created:${createdRange?.start}..${createdRange?.end}`;
+      }
 
-    return await this._request('GET /search/issues?q=' + encodeURIComponent(q));
+      if (updatedRange?.start && updatedRange?.end) {
+        updated = `updated:${updatedRange?.start}..${updatedRange?.end}`;
+      }
+
+      const q = `is:pr ${s} ${repo} ${author} ${created} ${updated}`;
+      return await this._request(
+        'GET /search/issues?q=' + encodeURIComponent(q)
+      );
+    });
+
+    const resolvedData = await Promise.all(promises);
+    return [...resolvedData.flat()];
   }
 
   _parseSearchIssueResponse(data) {
@@ -214,14 +228,13 @@ export class GitHub {
   }
 
   async getTeamsPullRequests({ state, startDate, endDate }) {
+    console.log('Getting pull requests');
     // Prevent request for closed PRs with no date range
     if ((!state || state === PR_STATE.closed) && (!startDate || !endDate)) {
       throw new Error(
         'Request for closed PRs requires a relative or absolute date range'
       );
     }
-
-    console.log('Getting pull requests');
 
     const teamMembers = await this.getAllTeamMembers();
     const repos = await this.getAllReposForTeams(this.teams);
