@@ -218,7 +218,15 @@ export class GitHub {
   }
 
   async getTeamsPullRequests({ state, startDate, endDate }) {
+    // Prevent request for closed PRs with no date range
+    if ((!state || state === PR_STATE.closed) && (!startDate || !endDate)) {
+      throw new Error(
+        'Request for closed PRs requires a relative or absolute date range'
+      );
+    }
+
     console.log('Getting pull requests');
+
     const teamMembers = await this.getAllTeamMembers();
     const repos = await this.getAllReposForTeams(this.teams);
     let result = [];
