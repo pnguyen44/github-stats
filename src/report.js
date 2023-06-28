@@ -1,4 +1,4 @@
-import { exportToExcel } from '../src/utils/exportUtils';
+import { Export } from '../src/utils/exportUtils';
 import {
   resolveDateRange,
   bucketDataByInterval,
@@ -8,16 +8,7 @@ import { PR_STATE } from './constant';
 export class Report {
   constructor(gh) {
     this.gh = gh;
-  }
-
-  _exportToExcel(fileName, data) {
-    exportToExcel(fileName, data)
-      .then(() => {
-        console.log('Data exported to Excel successfully');
-      })
-      .catch((error) => {
-        console.error('Error exporting data to Excel:', error);
-      });
+    this.export = new Export();
   }
 
   createPullRequestsReport(name, { state, startDate, endDate, startDaysAgo }) {
@@ -28,10 +19,10 @@ export class Report {
           console.log('No results to report');
           return;
         }
-        this._exportToExcel(name, [{ sheetName: 'data', data }]);
+        this.export.toExcel(name, [{ sheetName: 'data', data }]);
       })
       .catch((err) => {
-        console.log('Error in getting all pull request:', err);
+        throw new Error(`Error in creating pull requests report: ${err}`);
       });
   }
 
@@ -63,7 +54,6 @@ export class Report {
           console.log('No results to report');
           return;
         }
-
         const summaries = this._get24hReviewSummaryByInterval({
           data,
           startDate: start,
@@ -71,13 +61,13 @@ export class Report {
           daysInterval,
         });
 
-        this._exportToExcel(name, [
+        this.export.toExcel(name, [
           { sheetName: 'data', data },
           { sheetName: 'summary', data: summaries },
         ]);
       })
       .catch((err) => {
-        console.log('Error in getting all pull request', err);
+        throw Error(`Error in creating 24h review stats report: ${err}`);
       });
   }
 
@@ -85,23 +75,24 @@ export class Report {
     const totalCreated = data.length;
     const totalOpen = data.filter((d) => d.state === PR_STATE.open).length;
     const totalClosed = data.filter((d) => d.state === PR_STATE.closed).length;
+    const totalPRsWithReviewRequest = data.filter(
+      (d) => d.review_requested
+    ).length;
     const notReviewedWithin24hr = data.filter(
       (d) => d.reviewed_within_24_hours === false
     ).length;
     const percentageNotReviewWithin24hr = (
-      (notReviewedWithin24hr / totalCreated) *
+      (notReviewedWithin24hr / totalPRsWithReviewRequest) *
       100
     ).toFixed(2);
 
-    let start = startDate;
-    let end = endDate;
-
     return {
-      start_date: start,
-      end_date: end,
+      start_date: startDate,
+      end_date: endDate,
       total_created: totalCreated,
       total_open: totalOpen,
       total_closed: totalClosed,
+      total_prs_with_review_request: totalPRsWithReviewRequest,
       not_reviewed_within_24h: notReviewedWithin24hr,
       percentage_not_reviewed_within_24h: `${percentageNotReviewWithin24hr}%`,
     };

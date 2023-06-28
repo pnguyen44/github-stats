@@ -299,6 +299,7 @@ export class GitHub {
         moment()
       );
 
+      pr.review_requested = reviewRequests.length > 0;
       pr.reviewed_within_24_hours = doneWithin24hr;
     }
 
