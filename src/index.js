@@ -25,12 +25,11 @@ const reportGenerator = new ReportGenerator(gh, stats, exporter);
 
 // using a absolute date range
 // reportGenerator.create24hReviewStatsReport('PRs', {
-//   startDate: '2023-05-10',
-//   endDate: '2023-06-20',
+//   startDate: '2023-05-10 11:00:00 AM',
+//   endDate: '2023-06-21 10:59:59 AM',
 //   daysInterval: 14,
 // });
 
-reportGenerator.create24hReviewStatsReport('PRs', {
+reportGenerator.createPullRequestsReport('PRs', {
   state: PR_STATE.open,
-  startDaysAgo: 10,
 });

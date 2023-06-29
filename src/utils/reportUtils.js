@@ -6,12 +6,25 @@ export function formatDate(dateString) {
   return formattedDate;
 }
 
+export function isValidDateFormat(date, dateFormat) {
+  return moment(date, dateFormat, true).isValid();
+}
+
 export function getRelativeDateRange(daysAgo) {
-  const today = moment().format('YYYY-MM-DD');
-  const startDate = moment().subtract(daysAgo, 'days').format('YYYY-MM-DD');
-  console.log('start', startDate, 'end', today);
+  const today = moment().toISOString();
+  const startDate = moment().subtract(daysAgo, 'days').toISOString();
+  console.log(
+    'start',
+    convertIosString(startDate, DESIRED_DATE_FORMAT),
+    'end',
+    convertIosString(today, DESIRED_DATE_FORMAT)
+  );
 
   return { startDate, endDate: today };
+}
+
+export function convertIosString(date, dateFormat) {
+  return moment(date, moment.ISO_8601).format(dateFormat);
 }
 
 export function isStringConvertibleToDate(value) {
@@ -118,7 +131,7 @@ export function reviewedWithin24hrs(reviewRequests, reviews, currentDateTime) {
   return '';
 }
 
-export function resolveDateRange({ startDate, endDate, startDaysAgo }) {
+export function resolveDateRange(startDate, endDate, startDaysAgo) {
   if (startDate && endDate && startDaysAgo) {
     throw new Error('Invalid combination of absolute and relative date range');
   }
@@ -127,12 +140,23 @@ export function resolveDateRange({ startDate, endDate, startDaysAgo }) {
     throw new Error('Absolute range require both start and end dates');
   }
 
-  if (startDaysAgo > 0) {
-    return getRelativeDateRange(startDaysAgo);
+  if (
+    startDate &&
+    endDate &&
+    (!isValidDateFormat(startDate, DESIRED_DATE_FORMAT) ||
+      !isValidDateFormat(endDate, DESIRED_DATE_FORMAT))
+  ) {
+    throw new Error('Dates must be in `YYYY-MM-DD hh:mm:ss A format`');
   }
 
   if (startDate && endDate) {
+    startDate = moment(startDate, DESIRED_DATE_FORMAT).toISOString();
+    endDate = moment(endDate, DESIRED_DATE_FORMAT).toISOString();
     return { startDate, endDate };
+  }
+
+  if (startDaysAgo > 0) {
+    return getRelativeDateRange(startDaysAgo);
   }
 
   return {};
@@ -146,12 +170,16 @@ export function bucketDataByInterval({
 }) {
   const dateFormat = DESIRED_DATE_FORMAT;
   const buckets = [];
-  let currentDate = moment(startDate, dateFormat);
+  startDate = moment(convertIosString(startDate, dateFormat), dateFormat);
+  endDate = moment(convertIosString(endDate, dateFormat), dateFormat);
 
-  while (currentDate.isSameOrBefore(moment(endDate, dateFormat))) {
+  let currentDate = startDate;
+
+  while (currentDate.isBefore(moment(endDate, dateFormat).add(1, 'seconds'))) {
     const end = moment(currentDate, dateFormat)
-      .add(daysInterval - 1, 'days')
-      .endOf('day');
+      .add(daysInterval, 'days')
+      .subtract(1, 'seconds');
+
     const relevantData = data.filter((item) =>
       moment(item.created_at, dateFormat).isBetween(
         currentDate,
@@ -165,7 +193,7 @@ export function bucketDataByInterval({
       end: end.format(dateFormat),
       data: relevantData,
     });
-    currentDate = end.add(1, 'days').startOf('day');
+    currentDate = end.add(1, 'seconds');
   }
   return buckets;
 }

@@ -3,98 +3,73 @@ import {
   reviewedWithin24hrs,
   getDeadline,
   bucketDataByInterval,
+  isValidDateFormat,
 } from '../src/utils/reportUtils';
 import moment from 'moment';
 
 import { describe, it, expect } from '@jest/globals';
 
-const data = [
-  {
-    created_at: '2022-07-06 5:25:43 PM',
-    updated_at: '2022-07-13 11:52:09 AM',
-    state: 'open',
-    user: 'chetan-mudireddy-simplisafe',
-    title: 'Air 435 update pkg model',
-    html_url: 'https://github.com/simplisafe/aiengine/pull/31',
-    requested_teams: [],
-    requested_reviewers: [],
-  },
-  {
-    created_at: '2023-06-16 2:34:17 PM',
-    updated_at: '2023-06-16 2:34:17 PM',
-    state: 'open',
-    user: 'odutola-oduyoye-simplisafe',
-    title: 'MED-946/cortex feature flag',
-    html_url: 'https://github.com/simplisafe/bender/pull/143',
-    requested_teams: ['camfam'],
-    requested_reviewers: [],
-  },
-  {
-    created_at: '2023-05-23 10:58:11 AM',
-    updated_at: '2023-05-23 10:58:12 AM',
-    state: 'open',
-    user: 'dean-wetherby-simplisafe',
-    title: 'Updating vulnerable packages',
-    html_url: 'https://github.com/simplisafe/cranium/pull/128',
-    requested_teams: ['camfam', 'cloud-ai'],
-    requested_reviewers: [],
-  },
-  {
-    created_at: '2023-06-14 4:42:41 PM',
-    updated_at: '2023-06-14 4:42:42 PM',
-    state: 'open',
-    user: 'alan-willard-simplisafe',
-    title:
-      'feat(MED-784): Adding ARM base images for use on apple M1  hardware',
-    html_url: 'https://github.com/simplisafe/infra-mist/pull/11',
-    requested_teams: ['camfam'],
-    requested_reviewers: ['justin-forrest-simplisafe'],
-  },
-  {
-    created_at: '2023-03-28 9:48:54 AM',
-    updated_at: '2023-03-28 9:48:54 AM',
-    state: 'open',
-    user: 'justin-forrest-simplisafe',
-    title: 'Feature one main',
-    html_url: 'https://github.com/simplisafe/interview-camera-record/pull/1',
-    requested_teams: [],
-    requested_reviewers: [],
-  },
-  {
-    created_at: '2023-04-10 3:21:39 PM',
-    updated_at: '2023-04-24 9:33:04 AM',
-    state: 'open',
-    user: 'odutola-oduyoye-simplisafe',
-    title: 'feat(MED-791) Subscription Change Plan Feature',
-    html_url: 'https://github.com/simplisafe/leia/pull/1356',
-    requested_teams: ['camfam', 'siren'],
-    requested_reviewers: [],
-  },
-  {
-    created_at: '2023-06-15 10:51:16 AM',
-    updated_at: '2023-06-16 8:41:02 PM',
-    state: 'open',
-    user: 'alan-willard-simplisafe',
-    title: 'feat(MED-784): Adds Gstreamer and Pipeline management',
-    html_url: 'https://github.com/simplisafe/streamer-net/pull/28',
-    requested_teams: [],
-    requested_reviewers: [],
-  },
-  {
-    created_at: '2023-02-08 1:22:10 PM',
-    updated_at: '2023-02-08 1:22:10 PM',
-    state: 'open',
-    user: 'manet-mau-simplisafe',
-    title: 'feat(med-606): enabled deploys, removed superadmin role',
-    html_url: 'https://github.com/simplisafe/tf-bender/pull/11',
-    requested_teams: [],
-    requested_reviewers: [],
-  },
-];
-
 describe('Report utils tests', () => {
   it('Should correctly sort data', () => {
     const field = 'created_at';
+    const data = [
+      {
+        created_at: '2022-07-06 5:25:43 PM',
+        updated_at: '2022-07-13 11:52:09 AM',
+        state: 'open',
+        requested_teams: [],
+        requested_reviewers: [],
+      },
+      {
+        created_at: '2023-06-16 2:34:17 PM',
+        updated_at: '2023-06-16 2:34:17 PM',
+        state: 'open',
+        requested_teams: ['camfam'],
+        requested_reviewers: [],
+      },
+      {
+        created_at: '2023-05-23 10:58:11 AM',
+        updated_at: '2023-05-23 10:58:12 AM',
+        state: 'open',
+        requested_teams: ['camfam', 'cloud-ai'],
+        requested_reviewers: [],
+      },
+      {
+        created_at: '2023-06-14 4:42:41 PM',
+        updated_at: '2023-06-14 4:42:42 PM',
+        state: 'open',
+        requested_teams: ['camfam'],
+        requested_reviewers: ['justin-forrest-simplisafe'],
+      },
+      {
+        created_at: '2023-03-28 9:48:54 AM',
+        updated_at: '2023-03-28 9:48:54 AM',
+        state: 'open',
+        requested_teams: [],
+        requested_reviewers: [],
+      },
+      {
+        created_at: '2023-04-10 3:21:39 PM',
+        updated_at: '2023-04-24 9:33:04 AM',
+        state: 'open',
+        requested_teams: ['camfam', 'siren'],
+        requested_reviewers: [],
+      },
+      {
+        created_at: '2023-06-15 10:51:16 AM',
+        updated_at: '2023-06-16 8:41:02 PM',
+        state: 'open',
+        requested_teams: [],
+        requested_reviewers: [],
+      },
+      {
+        created_at: '2023-02-08 1:22:10 PM',
+        updated_at: '2023-02-08 1:22:10 PM',
+        state: 'open',
+        requested_teams: [],
+        requested_reviewers: [],
+      },
+    ];
     const result = sortDataByField(data, field, 'asc');
     const want = [
       '2022-07-06 5:25:43 PM',
@@ -428,68 +403,69 @@ describe('Report utils tests', () => {
         data: [],
       },
       {
-        created_at: '2023-06-22 3:41:39 PM',
-        data: [],
-      },
-      {
-        created_at: '2023-06-22 3:56:29 PM',
-        data: [],
-      },
-      {
-        created_at: '2023-06-30 3:59:40 PM',
-        data: [],
-      },
-      {
-        created_at: '2023-07-01 1:21:57 PM',
+        created_at: '2023-06-21 09:41:39 AM',
         data: [],
       },
     ];
     const want = [
       {
-        start: '2023-05-10 12:00:00 AM',
-        end: '2023-05-23 11:59:59 PM',
+        start: '2023-05-10 11:00:00 AM',
+        end: '2023-05-24 10:59:59 AM',
         data: [],
       },
       {
-        start: '2023-05-24 12:00:00 AM',
-        end: '2023-06-06 11:59:59 PM',
+        start: '2023-05-24 11:00:00 AM',
+        end: '2023-06-07 10:59:59 AM',
         data: [
           { created_at: '2023-06-01 9:26:06 AM', data: [] },
           { created_at: '2023-06-01 2:04:11 PM', data: [] },
           { created_at: '2023-06-02 4:31:40 PM', data: [] },
           { created_at: '2023-06-03 9:26:06 AM', data: [] },
+          { created_at: '2023-06-07 9:04:26 AM', data: [] },
         ],
       },
       {
-        start: '2023-06-07 12:00:00 AM',
-        end: '2023-06-20 11:59:59 PM',
+        start: '2023-06-07 11:00:00 AM',
+        end: '2023-06-21 10:59:59 AM',
         data: [
-          { created_at: '2023-06-07 9:04:26 AM', data: [] },
           { created_at: '2023-06-09 9:27:24 AM', data: [] },
           { created_at: '2023-06-09 10:11:15 AM', data: [] },
           { created_at: '2023-06-09 3:02:30 PM', data: [] },
           { created_at: '2023-06-10 3:13:13 PM', data: [] },
           { created_at: '2023-06-11 3:25:44 PM', data: [] },
           { created_at: '2023-06-20 3:34:44 PM', data: [] },
-        ],
-      },
-      {
-        start: '2023-06-21 12:00:00 AM',
-        end: '2023-07-04 11:59:59 PM',
-        data: [
-          { created_at: '2023-06-22 3:41:39 PM', data: [] },
-          { created_at: '2023-06-22 3:56:29 PM', data: [] },
-          { created_at: '2023-06-30 3:59:40 PM', data: [] },
-          { created_at: '2023-07-01 1:21:57 PM', data: [] },
+          { created_at: '2023-06-21 09:41:39 AM', data: [] },
         ],
       },
     ];
+
     const result = bucketDataByInterval({
       data,
-      startDate: '2023-05-10',
-      endDate: '2023-07-01',
+      startDate: moment('2023-05-10 11:00:00 AM').toISOString(),
+      endDate: moment('2023-06-21 10:59:59 AM').toISOString(),
       daysInterval: 14,
     });
+
     expect(result).toEqual(want);
+  });
+
+  it('Should correctly validate date format', () => {
+    const testCases = [
+      {
+        date: '2023-04-04',
+        dateFormat: 'YYYY-MM-DD h:mm:ss',
+        want: false,
+      },
+      {
+        date: '2023-06-22 3:56:29 PM',
+        dateFormat: 'YYYY-MM-DD h:mm:ss A',
+        want: true,
+      },
+    ];
+
+    for (const { date, dateFormat, want } of testCases) {
+      const result = isValidDateFormat(date, dateFormat);
+      expect(result).toEqual(want);
+    }
   });
 });

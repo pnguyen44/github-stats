@@ -8,26 +8,16 @@ export class ReportGenerator {
     this.exporter = exporter;
   }
 
-  _resolveDateRange(startDate, endDate, startDaysAgo) {
-    const dateRange = resolveDateRange({
-      startDate,
-      endDate,
-      startDaysAgo,
-    });
-
-    if (Object.keys(dateRange).length === 0) {
-      throw new Error('Require absolute or relative date range');
-    }
-
-    return dateRange;
-  }
-
   createPullRequestsReport(name, { state, startDate, endDate, startDaysAgo }) {
-    const { startDate: start, endDate: end } = this._resolveDateRange(
-      startDate,
-      endDate,
-      startDaysAgo
-    );
+    const dateRange = resolveDateRange(startDate, endDate, startDaysAgo);
+
+    const { startDate: start, endDate: end } = dateRange;
+
+    if (state === PR_STATE.closed && !start && !end) {
+      throw new Error(
+        'Closed PRs report require absolute or relative date range'
+      );
+    }
 
     this.stats
       .getTeamsPullRequest({ state, startDate: start, endDate: end })
@@ -47,7 +37,7 @@ export class ReportGenerator {
     name,
     { state, startDate, endDate, startDaysAgo, daysInterval }
   ) {
-    const { startDate: start, endDate: end } = this._resolveDateRange(
+    const { startDate: start, endDate: end } = resolveDateRange(
       startDate,
       endDate,
       startDaysAgo
