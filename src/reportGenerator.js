@@ -1,5 +1,10 @@
-import { resolveDateRange, bucketDataByInterval } from './utils/reportUtils';
+import {
+  resolveDateRange,
+  bucketDataByInterval,
+  capitalizeFirstLetter,
+} from './utils/reportUtils';
 import { PR_STATE } from './constant';
+import { config } from './config';
 
 export class ReportGenerator {
   constructor(github, stats, exporter) {
@@ -8,7 +13,7 @@ export class ReportGenerator {
     this.exporter = exporter;
   }
 
-  createPullRequestsReport(name, { state, startDate, endDate, startDaysAgo }) {
+  _resolveDateRange(state, startDate, endDate, startDaysAgo) {
     const dateRange = resolveDateRange(startDate, endDate, startDaysAgo);
 
     const { startDate: start, endDate: end } = dateRange;
@@ -17,6 +22,34 @@ export class ReportGenerator {
       throw new Error(
         'Closed PRs report require absolute or relative date range'
       );
+    }
+
+    return dateRange;
+  }
+
+  _getExcludedReposExcelData() {
+    return {
+      sheetName: 'excluded repos',
+      data: ['excluded repos', ...config.excludeRepos],
+    };
+  }
+
+  createPullRequestsReport({
+    name = 'PRs',
+    state,
+    startDate,
+    endDate,
+    startDaysAgo,
+  }) {
+    const { startDate: start, endDate: end } = this._resolveDateRange(
+      state,
+      startDate,
+      endDate,
+      startDaysAgo
+    );
+
+    if (state) {
+      name = `${capitalizeFirstLetter(state)} ${name}`;
     }
 
     this.stats
@@ -33,15 +66,60 @@ export class ReportGenerator {
       });
   }
 
-  create24hReviewStatsReport(
-    name,
-    { state, startDate, endDate, startDaysAgo, daysInterval }
-  ) {
-    const { startDate: start, endDate: end } = resolveDateRange(
+  createDependabotPRsReport({
+    name = 'Dependabot PRs',
+    state = PR_STATE.open,
+    startDate,
+    endDate,
+    startDaysAgo,
+  }) {
+    const { startDate: start, endDate: end } = this._resolveDateRange(
+      state,
       startDate,
       endDate,
       startDaysAgo
     );
+
+    if (state) {
+      name = `${capitalizeFirstLetter(state)} ${name}`;
+    }
+
+    this.stats
+      .getDependabotPRs({ state, startDate: start, endDate: end })
+      .then((data) => {
+        if (!data.length) {
+          console.log('No results to report');
+          return;
+        }
+
+        this.exporter.exportToExcel(name, [
+          { sheetName: 'data', data },
+          this._getExcludedReposExcelData(),
+        ]);
+      })
+      .catch((err) => {
+        throw new Error(`Error in creating dependabot report: ${err}`);
+      });
+  }
+
+  create24hReviewStatsReport({
+    name = 'PRs 24h Review Stats',
+    state,
+    startDate,
+    endDate,
+    startDaysAgo,
+    daysInterval,
+  }) {
+    const { startDate: start, endDate: end } = this._resolveDateRange(
+      state,
+      startDate,
+      endDate,
+      startDaysAgo
+    );
+
+    if (state) {
+      name = `${capitalizeFirstLetter(state)} ${name}`;
+    }
 
     this.stats
       .get24hReviewStats({
@@ -64,6 +142,7 @@ export class ReportGenerator {
         this.exporter.exportToExcel(name, [
           { sheetName: 'data', data },
           { sheetName: 'summary', data: summaries },
+          this._getExcludedReposExcelData(),
         ]);
       })
       .catch((err) => {
@@ -126,18 +205,24 @@ export class ReportGenerator {
     return result;
   }
 
-  createDependabotReport(name, { state, startDate, endDate, startDaysAgo }) {
-    this.stats
-      .getDependabotPRs({ state, startDate, endDate, startDaysAgo })
+  createTeamsReposReport() {
+    const name = 'Teams repos';
+    this.gh
+      .getTeamsRepos()
       .then((data) => {
         if (!data.length) {
           console.log('No results to report');
           return;
         }
-        this.exporter.exportToExcel(name, [{ sheetName: 'data', data }]);
+
+        const updatedData = data.map((repo) => ({ name: repo }));
+
+        this.exporter.exportToExcel(name, [
+          { sheetName: 'data', data: updatedData },
+        ]);
       })
       .catch((err) => {
-        throw new Error(`Error in creating dependabot report: ${err}`);
+        throw new Error(`Error in creating teams repos report: ${err}`);
       });
   }
 }

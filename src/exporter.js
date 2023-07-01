@@ -7,6 +7,16 @@ export class Exporter {
     for (const { sheetName, data } of sheetsData) {
       const worksheet = workbook.addWorksheet(sheetName);
 
+      const containsObjects = data.some((item) => typeof item === 'object');
+
+      if (!containsObjects) {
+        data.forEach((d) => {
+          worksheet.addRow([d]);
+        });
+
+        continue;
+      }
+
       // header
       const columns = Object.keys(data[0]);
       worksheet.addRow(columns);

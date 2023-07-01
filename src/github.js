@@ -2,6 +2,7 @@ import { Octokit } from '@octokit/rest';
 
 import { formatDate, sortDataByField } from './utils/reportUtils';
 import { PR_STATE } from './constant';
+import { config } from './config';
 
 export class GitHub {
   constructor({ owner, token, teams }) {
@@ -73,7 +74,7 @@ export class GitHub {
     return response.map((d) => d.name);
   }
 
-  async getAllReposForTeams() {
+  async getTeamsRepos() {
     console.log('Getting repos for teams');
 
     let result = [];
@@ -86,8 +87,14 @@ export class GitHub {
     }
 
     const unique = [...new Set(result)];
-    console.log('total repos', unique.length);
-    return unique;
+    // Remove any repos in the exclude repos list
+    const updatedList = unique.filter((repo) => {
+      if (!config.excludeRepos.includes(repo)) {
+        return true;
+      }
+    });
+    console.log('total repos', updatedList.length);
+    return updatedList;
   }
 
   async searchIssues({ repos, authors, state, createdRange, updatedRange }) {
@@ -236,7 +243,7 @@ export class GitHub {
       );
     }
 
-    const repos = await this.getAllReposForTeams(this.teams);
+    const repos = await this.getTeamsRepos();
     let result = [];
 
     const options = {

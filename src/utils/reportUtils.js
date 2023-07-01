@@ -1,8 +1,13 @@
 import moment from 'moment';
-import { HOLIDAYS, DESIRED_DATE_FORMAT } from '../config';
+import { config } from '../config';
+
+export function capitalizeFirstLetter(str) {
+  const [firstLetter, ...rest] = str;
+  return `${firstLetter.toUpperCase()}${rest.join('').toLowerCase()}`;
+}
 
 export function formatDate(dateString) {
-  const formattedDate = moment(dateString).format(DESIRED_DATE_FORMAT);
+  const formattedDate = moment(dateString).format(config.desiredDateFormat);
   return formattedDate;
 }
 
@@ -15,9 +20,9 @@ export function getRelativeDateRange(daysAgo) {
   const startDate = moment().subtract(daysAgo, 'days').toISOString();
   console.log(
     'start',
-    convertIosString(startDate, DESIRED_DATE_FORMAT),
+    convertIosString(startDate, config.desiredDateFormat),
     'end',
-    convertIosString(today, DESIRED_DATE_FORMAT)
+    convertIosString(today, config.desiredDateFormat)
   );
 
   return { startDate, endDate: today };
@@ -57,7 +62,7 @@ export function sortDataByField(data, field, sortDirection) {
 
 export function getDeadline(date) {
   const dateMoment = moment(date);
-  const holidays = HOLIDAYS;
+  const holidays = config.holidays;
   const isFriday = dateMoment.format('dddd') === 'Friday';
 
   let days = 0;
@@ -143,15 +148,15 @@ export function resolveDateRange(startDate, endDate, startDaysAgo) {
   if (
     startDate &&
     endDate &&
-    (!isValidDateFormat(startDate, DESIRED_DATE_FORMAT) ||
-      !isValidDateFormat(endDate, DESIRED_DATE_FORMAT))
+    (!isValidDateFormat(startDate, config.desiredDateFormat) ||
+      !isValidDateFormat(endDate, config.desiredDateFormat))
   ) {
     throw new Error('Dates must be in `YYYY-MM-DD hh:mm:ss A format`');
   }
 
   if (startDate && endDate) {
-    startDate = moment(startDate, DESIRED_DATE_FORMAT).toISOString();
-    endDate = moment(endDate, DESIRED_DATE_FORMAT).toISOString();
+    startDate = moment(startDate, config.desiredDateFormat).toISOString();
+    endDate = moment(endDate, config.desiredDateFormat).toISOString();
     return { startDate, endDate };
   }
 
@@ -168,7 +173,7 @@ export function bucketDataByInterval({
   endDate,
   daysInterval,
 }) {
-  const dateFormat = DESIRED_DATE_FORMAT;
+  const dateFormat = config.desiredDateFormat;
   const buckets = [];
   startDate = moment(convertIosString(startDate, dateFormat), dateFormat);
   endDate = moment(convertIosString(endDate, dateFormat), dateFormat);

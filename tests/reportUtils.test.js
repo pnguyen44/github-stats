@@ -439,10 +439,12 @@ describe('Report utils tests', () => {
       },
     ];
 
+    const dateFormat = 'YYYY-MM-DD h:mm:ss A';
+
     const result = bucketDataByInterval({
       data,
-      startDate: moment('2023-05-10 11:00:00 AM').toISOString(),
-      endDate: moment('2023-06-21 10:59:59 AM').toISOString(),
+      startDate: moment('2023-05-10 11:00:00 AM', dateFormat).toISOString(),
+      endDate: moment('2023-06-21 10:59:59 AM', dateFormat).toISOString(),
       daysInterval: 14,
     });
 
