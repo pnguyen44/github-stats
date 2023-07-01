@@ -28,10 +28,23 @@ export class ReportGenerator {
   }
 
   _getExcludedReposExcelData() {
+    const name = 'excluded repos';
     return {
-      sheetName: 'excluded repos',
-      data: ['excluded repos', ...config.excludeRepos],
+      sheetName: name,
+      data: [name, ...config.excludeRepos],
     };
+  }
+
+  _getHolidaysExcelData() {
+    const name = 'holidays';
+    return {
+      sheetName: name,
+      data: [name, ...config.holidays],
+    };
+  }
+
+  _getAdditionalSheetsData() {
+    return [this._getExcludedReposExcelData(), this._getHolidaysExcelData()];
   }
 
   createPullRequestsReport({
@@ -59,7 +72,10 @@ export class ReportGenerator {
           console.log('No results to report');
           return;
         }
-        this.exporter.exportToExcel(name, [{ sheetName: 'data', data }]);
+        this.exporter.exportToExcel(name, [
+          { sheetName: 'data', data },
+          ...this._getAdditionalSheetsData(),
+        ]);
       })
       .catch((err) => {
         throw new Error(`Error in creating pull requests report: ${err}`);
@@ -94,7 +110,7 @@ export class ReportGenerator {
 
         this.exporter.exportToExcel(name, [
           { sheetName: 'data', data },
-          this._getExcludedReposExcelData(),
+          ...this._getAdditionalSheetsData(),
         ]);
       })
       .catch((err) => {
@@ -142,7 +158,7 @@ export class ReportGenerator {
         this.exporter.exportToExcel(name, [
           { sheetName: 'data', data },
           { sheetName: 'summary', data: summaries },
-          this._getExcludedReposExcelData(),
+          ...this._getAdditionalSheetsData(),
         ]);
       })
       .catch((err) => {
