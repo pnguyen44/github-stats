@@ -2,6 +2,12 @@
 
 Generates reports using data fetched from GitHub API.
 
+## prerequisite
+
+This project pulls in data from GitHub using the GitHub API. You need to generate a token in order to use the API.
+
+To generate a token, please follow the instructions in this link: <https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#keeping-your-personal-access-tokens-secure>
+
 ## pre-commit
 
 ### Install pre-commit
