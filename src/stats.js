@@ -22,7 +22,7 @@ export class Stats {
   async getDependabotPRs({ state, startDate, endDate }) {
     const teamMembers = [DEPENDABOT];
 
-    return this.gh.getPullRequests({
+    return await this.gh.getPullRequests({
       state,
       startDate,
       endDate,

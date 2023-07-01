@@ -2,7 +2,6 @@ import { Octokit } from '@octokit/rest';
 
 import { formatDate, sortDataByField } from './utils/reportUtils';
 import { PR_STATE } from './constant';
-import { config } from './config';
 
 export class GitHub {
   constructor({ owner, token, teams }) {
@@ -87,14 +86,8 @@ export class GitHub {
     }
 
     const unique = [...new Set(result)];
-    // Remove any repos in the exclude repos list
-    const updatedList = unique.filter((repo) => {
-      if (!config.excludeRepos.includes(repo)) {
-        return true;
-      }
-    });
-    console.log('total repos', updatedList.length);
-    return updatedList;
+    console.log('repos count', unique.length);
+    return unique;
   }
 
   async searchIssues({ repos, authors, state, createdRange, updatedRange }) {
@@ -236,12 +229,6 @@ export class GitHub {
 
   async getPullRequests({ state, startDate, endDate, teamMembers }) {
     console.log('Getting pull requests');
-    // Prevent request for closed PRs with no date range
-    if ((!state || state === PR_STATE.closed) && (!startDate || !endDate)) {
-      throw new Error(
-        'Request for closed PRs requires a relative or absolute date range'
-      );
-    }
 
     const repos = await this.getTeamsRepos();
     let result = [];

@@ -31,6 +31,6 @@ const reportGenerator = new ReportGenerator(gh, stats, exporter);
 //   daysInterval: 14,
 // });
 
-reportGenerator.createPullRequestsReport({
+reportGenerator.createDependabotPRsReport({
   state: PR_STATE.open,
 });

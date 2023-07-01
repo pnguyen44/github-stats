@@ -2,6 +2,7 @@ import {
   resolveDateRange,
   bucketDataByInterval,
   capitalizeFirstLetter,
+  convertIosString,
 } from './utils/reportUtils';
 import { PR_STATE } from './constant';
 import { config } from './config';
@@ -27,6 +28,22 @@ export class ReportGenerator {
     return dateRange;
   }
 
+  _addDetailsToFileName(name, state, start, end) {
+    let updatedName = name;
+
+    if (state) {
+      updatedName = `${capitalizeFirstLetter(state)} ${name}`;
+    }
+
+    if (start && end) {
+      const formattedStartDate = convertIosString(start, 'YYYY-MM-DD');
+      const formattedEndDate = convertIosString(end, 'YYYY-MM-DD');
+      updatedName += `_${formattedStartDate} - ${formattedEndDate}`;
+    }
+
+    return updatedName;
+  }
+
   _getExcludedReposExcelData() {
     const name = 'excluded repos';
     return {
@@ -43,10 +60,6 @@ export class ReportGenerator {
     };
   }
 
-  _getAdditionalSheetsData() {
-    return [this._getExcludedReposExcelData(), this._getHolidaysExcelData()];
-  }
-
   createPullRequestsReport({
     name = 'PRs',
     state,
@@ -61,10 +74,6 @@ export class ReportGenerator {
       startDaysAgo
     );
 
-    if (state) {
-      name = `${capitalizeFirstLetter(state)} ${name}`;
-    }
-
     this.stats
       .getTeamsPullRequest({ state, startDate: start, endDate: end })
       .then((data) => {
@@ -72,9 +81,16 @@ export class ReportGenerator {
           console.log('No results to report');
           return;
         }
-        this.exporter.exportToExcel(name, [
+
+        const updatedFileName = this._addDetailsToFileName(
+          name,
+          state,
+          start,
+          end
+        );
+
+        this.exporter.exportToExcel(updatedFileName, [
           { sheetName: 'data', data },
-          ...this._getAdditionalSheetsData(),
         ]);
       })
       .catch((err) => {
@@ -96,10 +112,6 @@ export class ReportGenerator {
       startDaysAgo
     );
 
-    if (state) {
-      name = `${capitalizeFirstLetter(state)} ${name}`;
-    }
-
     this.stats
       .getDependabotPRs({ state, startDate: start, endDate: end })
       .then((data) => {
@@ -108,10 +120,26 @@ export class ReportGenerator {
           return;
         }
 
-        this.exporter.exportToExcel(name, [
-          { sheetName: 'data', data },
-          ...this._getAdditionalSheetsData(),
-        ]);
+        // Remove any prs from repos in the exclude repos list
+        const updatedData = data.filter(({ repo }) => {
+          if (!config.excludeRepos.includes(repo)) {
+            return true;
+          }
+        });
+
+        const excelData = [
+          { sheetName: 'data', data: updatedData },
+          this._getExcludedReposExcelData(),
+        ];
+
+        const updatedFileName = this._addDetailsToFileName(
+          name,
+          state,
+          start,
+          end
+        );
+
+        this.exporter.exportToExcel(updatedFileName, excelData);
       })
       .catch((err) => {
         throw new Error(`Error in creating dependabot report: ${err}`);
@@ -133,10 +161,6 @@ export class ReportGenerator {
       startDaysAgo
     );
 
-    if (state) {
-      name = `${capitalizeFirstLetter(state)} ${name}`;
-    }
-
     this.stats
       .get24hReviewStats({
         state,
@@ -155,10 +179,17 @@ export class ReportGenerator {
           daysInterval,
         });
 
-        this.exporter.exportToExcel(name, [
+        const updatedFileName = this._addDetailsToFileName(
+          name,
+          state,
+          start,
+          end
+        );
+
+        this.exporter.exportToExcel(updatedFileName, [
           { sheetName: 'data', data },
           { sheetName: 'summary', data: summaries },
-          ...this._getAdditionalSheetsData(),
+          this._getHolidaysExcelData(),
         ]);
       })
       .catch((err) => {
