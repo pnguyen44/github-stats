@@ -2,6 +2,7 @@ import { Octokit } from '@octokit/rest';
 
 import { formatDate, sortDataByField } from './utils/reportUtils';
 import { PR_STATE } from './constant';
+const DEPENDABOT = 'app/dependabot';
 
 export class GitHub {
   constructor({ owner, token, teams }) {
@@ -244,11 +245,6 @@ export class GitHub {
         start: startDate,
         end: endDate,
       };
-
-      options.updatedRange = {
-        start: startDate,
-        end: endDate,
-      };
     }
 
     const data = await this.searchIssues(options);
@@ -273,5 +269,27 @@ export class GitHub {
       result = result.concat(this._parsePullRequestResponse(filtered));
     }
     return sortDataByField(result, 'created_at', 'asc');
+  }
+
+  async getTeamsPullRequest({ state, startDate, endDate }) {
+    const teamMembers = await this.getAllTeamMembers();
+
+    return await this.getPullRequests({
+      state,
+      startDate,
+      endDate,
+      teamMembers,
+    });
+  }
+
+  async getDependabotPRs({ state, startDate, endDate }) {
+    const teamMembers = [DEPENDABOT];
+
+    return await this.getPullRequests({
+      state,
+      startDate,
+      endDate,
+      teamMembers,
+    });
   }
 }

@@ -74,7 +74,7 @@ export class ReportGenerator {
       startDaysAgo
     );
 
-    this.stats
+    this.gh
       .getTeamsPullRequest({ state, startDate: start, endDate: end })
       .then((data) => {
         if (!data.length) {
@@ -112,7 +112,7 @@ export class ReportGenerator {
       startDaysAgo
     );
 
-    this.stats
+    this.gh
       .getDependabotPRs({ state, startDate: start, endDate: end })
       .then((data) => {
         if (!data.length) {

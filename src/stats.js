@@ -1,33 +1,9 @@
 import moment from 'moment';
 import { reviewedWithin24hrs } from './utils/reportUtils';
 
-const DEPENDABOT = 'app/dependabot';
-
 export class Stats {
   constructor(github) {
     this.gh = github;
-  }
-
-  async getTeamsPullRequest({ state, startDate, endDate }) {
-    const teamMembers = await this.gh.getAllTeamMembers();
-
-    return this.gh.getPullRequests({
-      state,
-      startDate,
-      endDate,
-      teamMembers,
-    });
-  }
-
-  async getDependabotPRs({ state, startDate, endDate }) {
-    const teamMembers = [DEPENDABOT];
-
-    return await this.gh.getPullRequests({
-      state,
-      startDate,
-      endDate,
-      teamMembers,
-    });
   }
 
   async get24hReviewStats({ state, startDate, endDate }) {
