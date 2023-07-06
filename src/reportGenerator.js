@@ -6,6 +6,7 @@ import {
 } from './utils/reportUtils';
 import { PR_STATE } from './constant';
 import { config } from './config';
+import moment from 'moment';
 
 export class ReportGenerator {
   constructor(github, stats, exporter) {
@@ -231,8 +232,12 @@ export class ReportGenerator {
     if (!daysInterval || daysInterval <= 0) {
       buckets = [
         {
-          start: startDate,
-          end: endDate,
+          start: moment(startDate, moment.ISO_8601).format(
+            config.desiredDateFormat
+          ),
+          end: moment(endDate, moment.ISO_8601).format(
+            config.desiredDateFormat
+          ),
           data,
         },
       ];
