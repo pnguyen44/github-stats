@@ -204,11 +204,11 @@ export class ReportGenerator {
     const totalPRsWithReviewRequest = data.filter(
       (d) => d.review_requested
     ).length;
-    const notReviewedWithin24hr = data.filter(
-      (d) => d.reviewed_within_24_hours === false
+    const reviewedWithin24hr = data.filter(
+      (d) => d.reviewed_within_24_hours
     ).length;
-    const percentageNotReviewWithin24hr = (
-      (notReviewedWithin24hr / totalPRsWithReviewRequest) *
+    const percentageReviewWithin24hr = (
+      (reviewedWithin24hr / totalPRsWithReviewRequest) *
       100
     ).toFixed(2);
 
@@ -219,8 +219,8 @@ export class ReportGenerator {
       total_open: totalOpen,
       total_closed: totalClosed,
       total_prs_with_review_request: totalPRsWithReviewRequest,
-      not_reviewed_within_24h: notReviewedWithin24hr,
-      percentage_not_reviewed_within_24h: `${percentageNotReviewWithin24hr}%`,
+      reviewed_within_24h: reviewedWithin24hr,
+      percentage_reviewed_within_24h: `${percentageReviewWithin24hr}%`,
     };
   }
 
