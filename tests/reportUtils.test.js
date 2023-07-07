@@ -4,6 +4,7 @@ import {
   getDeadline,
   bucketDataByInterval,
   isValidDateFormat,
+  reviewedWithin24hrWithBreakdown,
 } from '../src/utils/reportUtils';
 import moment from 'moment';
 
@@ -87,247 +88,682 @@ describe('Report utils tests', () => {
     expect(resultDates).toEqual(want);
   });
 
-  it('Should correctly check if PRs are review within 24 hours', () => {
-    const today = moment('2023-06-24T00:00:00Z');
-    const testCases = [
-      {
-        reviewRequests: [],
-        reviews: [],
-        currentDateTime: moment('2023-06-16T20:48:08Z'),
-        want: '',
-      },
-      {
-        reviewRequests: [
-          {
-            created_at: '2023-06-13T21:26:05Z',
-          },
-          {
-            created_at: '2023-06-15T12:55:36Z',
-          },
-        ],
-        reviews: [
-          {
-            state: 'PENDING',
-          },
-          {
-            state: 'COMMENTED',
-            submitted_at: '2023-06-14T17:48:08Z',
-          },
-          {
-            state: 'COMMENTED',
-            submitted_at: '2023-06-16T17:48:08Z',
-          },
-        ],
-        currentDateTime: moment('2023-06-16T20:48:08Z'),
-        want: false,
-      },
-      {
-        reviewRequests: [
-          {
-            event: 'review_requested',
-            created_at: '2023-06-13T21:26:05Z',
-          },
-        ],
-        reviews: [
-          {
-            user: {
-              login: 'phuongnhat-nguyen-simplisafe',
+  describe('PRs reviewed within 24 hours evaluation', () => {
+    it('Should correctly check if PRs are review within 24 hours', () => {
+      const today = moment('2023-06-24T00:00:00Z');
+      const testCases = [
+        // no review request
+        {
+          reviewRequests: [],
+          reviews: [],
+          currentDateTime: moment('2023-06-16T20:48:08Z'),
+          want: null,
+        },
+        // has not passed deadline
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-13T21:26:05Z',
             },
-            state: 'PENDING',
-          },
-        ],
-        currentDateTime: moment('2023-06-13T22:48:08Z'),
-        want: '',
-      },
-      {
-        reviewRequests: [
-          {
-            event: 'review_requested',
-            created_at: '2023-06-13T21:26:05Z',
-          },
-        ],
-        reviews: [],
-        currentDateTime: today,
-        want: false,
-      },
-      {
-        reviewRequests: [
-          {
-            event: 'review_requested',
-            created_at: '2023-06-13T21:26:05Z',
-          },
-        ],
-        reviews: [],
-        currentDateTime: moment('2023-06-13T22:26:05Z'),
-        want: '',
-      },
-      {
-        reviewRequests: [
-          {
-            created_at: '2023-06-14T21:33:27Z',
-            requestedReviewer: {
-              name: 'camfam',
+          ],
+          reviews: [
+            {
+              state: 'PENDING',
             },
-          },
-        ],
-        reviews: [
-          {
-            submitted_at: '2023-06-15T13:14:46Z',
-            state: 'APPROVED',
-          },
-        ],
-        currentDateTime: today,
-        want: true,
-      },
-      {
-        reviewRequests: [
-          {
-            created_at: '2023-06-22T14:48:17Z',
-            requestedReviewer: {
-              name: 'camfam',
+          ],
+          currentDateTime: moment('2023-06-13T22:48:08Z'),
+          want: null,
+        },
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-13T21:26:05Z',
             },
-          },
-        ],
-        reviews: [
-          {
-            submitted_at: '2023-06-22T15:35:20Z',
-            state: 'COMMENTED',
-          },
-          {
-            submitted_at: '2023-06-22T18:44:01Z',
-            state: 'COMMENTED',
-          },
-          {
-            submitted_at: '2023-06-22T18:51:20Z',
-            state: 'COMMENTED',
-          },
-          {
-            submitted_at: '2023-06-23T15:08:03Z',
-            state: 'COMMENTED',
-          },
-          {
-            submitted_at: '2023-06-23T15:08:22Z',
-            state: 'COMMENTED',
-          },
-          {
-            submitted_at: '2023-06-23T15:08:29Z',
-            state: 'COMMENTED',
-          },
-          {
-            submitted_at: '2023-06-23T15:08:37Z',
-            state: 'COMMENTED',
-          },
-        ],
-        currentDateTime: today,
-        want: true,
-      },
-      {
-        reviewRequests: [
-          {
-            created_at: '2023-06-22T13:33:37Z',
-            requestedReviewer: {
-              name: 'camfam',
+          ],
+          reviews: [],
+          currentDateTime: moment('2023-06-13T22:26:05Z'),
+          want: null,
+        },
+        // review by deadline
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-14T21:33:27Z',
             },
-          },
-          {
-            created_at: '2023-06-22T13:33:37Z',
-            requestedReviewer: {
-              name: 'cloud-ai',
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-15T13:14:46Z',
             },
-          },
-        ],
-        reviews: [
-          {
-            submitted_at: '2023-06-22T14:04:21Z',
-            state: 'APPROVED',
-          },
-        ],
-        currentDateTime: today,
-        want: true,
-      },
-      {
-        reviewRequests: [
-          {
-            created_at: '2023-06-15T17:10:03Z',
-            requestedReviewer: {
-              name: 'camfam',
+          ],
+          currentDateTime: today,
+          want: true,
+        },
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-22T14:48:17Z',
             },
-          },
-        ],
-        reviews: [
-          {
-            submitted_at: '2023-06-16T19:42:55Z',
-            state: 'COMMENTED',
-          },
-          {
-            submitted_at: '2023-06-20T13:41:00Z',
-            state: 'COMMENTED',
-          },
-          {
-            submitted_at: '2023-06-20T13:41:12Z',
-            state: 'COMMENTED',
-          },
-          {
-            submitted_at: '2023-06-20T13:43:51Z',
-            state: 'COMMENTED',
-          },
-          {
-            submitted_at: '2023-06-20T13:44:29Z',
-            state: 'COMMENTED',
-          },
-          {
-            submitted_at: '2023-06-20T19:43:21Z',
-            state: 'APPROVED',
-          },
-        ],
-        currentDateTime: today,
-        want: false,
-      },
-      // Falls on a weekend
-      {
-        reviewRequests: [
-          {
-            created_at: '2023-06-23T20:28:20Z',
-            requestedReviewer: {
-              name: 'camfam',
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-22T15:35:20Z',
             },
-          },
-        ],
-        reviews: [],
-        currentDateTime: moment('2023-06-26T00:28:20Z'),
-        want: '',
-      },
-      // Falls on a weekend
-      {
-        reviewRequests: [
-          {
-            created_at: '2023-06-23T20:28:20Z',
-            requestedReviewer: {
-              name: 'camfam',
+            {
+              submitted_at: '2023-06-22T18:44:01Z',
             },
-          },
-        ],
-        reviews: [],
-        currentDateTime: moment('2023-06-27T00:28:20Z'),
-        want: false,
-      },
-    ];
+            {
+              submitted_at: '2023-06-22T18:51:20Z',
+            },
+            {
+              submitted_at: '2023-06-23T15:08:03Z',
+            },
+            {
+              submitted_at: '2023-06-23T15:08:22Z',
+            },
+            {
+              submitted_at: '2023-06-23T15:08:29Z',
+            },
+            {
+              submitted_at: '2023-06-23T15:08:37Z',
+            },
+          ],
+          currentDateTime: today,
+          want: true,
+        },
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-22T13:33:37Z',
+            },
+            {
+              created_at: '2023-06-22T13:33:37Z',
+            },
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-22T14:04:21Z',
+            },
+          ],
+          currentDateTime: today,
+          want: true,
+        },
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-09T14:11:15Z',
+            },
+            {
+              created_at: '2023-06-12T13:39:17Z',
+            },
+            {
+              created_at: '2023-06-12T13:39:18Z',
+            },
+            {
+              created_at: '2023-06-12T14:26:22Z',
+            },
+            {
+              created_at: '2023-06-12T14:35:26Z',
+            },
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-09T20:19:45Z',
+            },
+            {
+              submitted_at: '2023-06-09T21:19:00Z',
+            },
+            {
+              submitted_at: '2023-06-09T21:20:06Z',
+            },
+            {
+              submitted_at: '2023-06-09T21:22:26Z',
+            },
+            {
+              submitted_at: '2023-06-12T13:20:09Z',
+            },
+            {
+              submitted_at: '2023-06-12T13:34:11Z',
+            },
+            {
+              submitted_at: '2023-06-12T13:39:04Z',
+            },
+            {
+              submitted_at: '2023-06-12T13:50:56Z',
+            },
+            {
+              submitted_at: '2023-06-12T14:14:58Z',
+            },
+            {
+              submitted_at: '2023-06-12T14:26:34Z',
+            },
+            {
+              submitted_at: '2023-06-12T14:31:57Z',
+            },
+            {
+              submitted_at: '2023-06-12T18:00:53Z',
+            },
+          ],
+          want: true,
+        },
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-14T20:31:17Z',
+            },
+            {
+              created_at: '2023-06-14T20:31:18Z',
+            },
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-14T21:26:05Z',
+            },
+          ],
+          want: true,
+        },
+        // not reviewed by deadline
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-13T21:26:05Z',
+            },
+            {
+              created_at: '2023-06-15T12:55:36Z',
+            },
+          ],
+          reviews: [
+            {
+              state: 'PENDING',
+            },
+            {
+              submitted_at: '2023-06-14T17:48:08Z',
+            },
+            {
+              submitted_at: '2023-06-16T17:48:08Z',
+            },
+          ],
+          currentDateTime: moment('2023-06-16T20:48:08Z'),
+          want: false,
+        },
+        {
+          reviewRequests: [
+            {
+              event: 'review_requested',
+              created_at: '2023-06-13T21:26:05Z',
+            },
+          ],
+          reviews: [],
+          currentDateTime: today,
+          want: false,
+        },
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-15T17:10:03Z',
+            },
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-16T19:42:55Z',
+            },
+            {
+              submitted_at: '2023-06-20T13:41:00Z',
+            },
+            {
+              submitted_at: '2023-06-20T13:41:12Z',
+            },
+            {
+              submitted_at: '2023-06-20T13:43:51Z',
+            },
+            {
+              submitted_at: '2023-06-20T13:44:29Z',
+            },
+            {
+              submitted_at: '2023-06-20T19:43:21Z',
+            },
+          ],
+          currentDateTime: today,
+          want: false,
+        },
+        // Falls on a weekend
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-23T20:28:20Z',
+            },
+          ],
+          reviews: [],
+          currentDateTime: moment('2023-06-26T00:28:20Z'),
+          want: null,
+        },
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-23T20:28:20Z',
+            },
+          ],
+          reviews: [],
+          currentDateTime: moment('2023-06-27T00:28:20Z'),
+          want: false,
+        },
+      ];
 
-    for (const [index, testCase] of Object.entries(testCases)) {
-      const { reviewRequests, reviews, currentDateTime, want } = testCase;
+      for (const [index, testCase] of Object.entries(testCases)) {
+        const { reviewRequests, reviews, currentDateTime, want } = testCase;
 
-      const result = reviewedWithin24hrs(
-        reviewRequests,
-        reviews,
-        currentDateTime
-      );
+        const result = reviewedWithin24hrs(
+          reviewRequests,
+          reviews,
+          currentDateTime
+        );
 
-      if (result !== want) {
-        console.log(`Test case at index ${index} failed.`);
+        if (result !== want) {
+          console.log(`Test case at index ${index} failed.`);
+        }
+
+        expect(result).toEqual(want);
       }
+    });
 
-      expect(result).toEqual(want);
-    }
+    it('Should correctly check if PRs are review within 24 hours with breakdowns', () => {
+      const today = moment('2023-06-24T00:00:00Z');
+      const testCases = [
+        // ** test initial request review **
+        // no request made
+        {
+          reviewRequests: [],
+          reviews: [],
+          currentDateTime: today,
+          want: {
+            initialReviewedWithin24h: null,
+            rerequestReviewedWithin24h: null,
+            totalRerequest: 0,
+          },
+        },
+        // has not passed deadline
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-13T21:26:05Z',
+            },
+          ],
+          reviews: [
+            {
+              state: 'PENDING',
+            },
+          ],
+          currentDateTime: moment('2023-06-13T22:48:08Z'),
+          want: {
+            initialReviewedWithin24h: null,
+            rerequestReviewedWithin24h: null,
+            totalRerequest: 0,
+          },
+        },
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-13T21:26:05Z',
+            },
+          ],
+          reviews: [],
+          currentDateTime: moment('2023-06-13T22:26:05Z'),
+          want: {
+            initialReviewedWithin24h: null,
+            rerequestReviewedWithin24h: null,
+            totalRerequest: 0,
+          },
+        },
+        // was reviewed by deadline
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-22T14:48:17Z',
+            },
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-22T15:35:20Z',
+            },
+            {
+              submitted_at: '2023-06-22T18:44:01Z',
+            },
+            {
+              submitted_at: '2023-06-22T18:51:20Z',
+            },
+            {
+              submitted_at: '2023-06-23T15:08:03Z',
+            },
+            {
+              submitted_at: '2023-06-23T15:08:22Z',
+            },
+            {
+              submitted_at: '2023-06-23T15:08:29Z',
+            },
+            {
+              submitted_at: '2023-06-23T15:08:37Z',
+            },
+          ],
+          currentDateTime: today,
+          want: {
+            initialReviewedWithin24h: true,
+            rerequestReviewedWithin24h: null,
+            totalRerequest: 0,
+          },
+        },
+        // was not reviewed by deadline
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-13T21:26:05Z',
+            },
+          ],
+          reviews: [],
+          currentDateTime: today,
+          want: {
+            initialReviewedWithin24h: false,
+            rerequestReviewedWithin24h: null,
+            totalRerequest: 0,
+          },
+        },
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-15T17:10:03Z',
+            },
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-16T19:42:55Z',
+            },
+            {
+              submitted_at: '2023-06-20T13:41:00Z',
+            },
+            {
+              submitted_at: '2023-06-20T13:41:12Z',
+            },
+            {
+              submitted_at: '2023-06-20T13:43:51Z',
+            },
+            {
+              submitted_at: '2023-06-20T13:44:29Z',
+            },
+            {
+              submitted_at: '2023-06-20T19:43:21Z',
+            },
+          ],
+          currentDateTime: today,
+          want: {
+            initialReviewedWithin24h: false,
+            rerequestReviewedWithin24h: null,
+            totalRerequest: 0,
+          },
+        },
+        // Falls on a weekend
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-23T20:28:20Z',
+            },
+          ],
+          reviews: [],
+          currentDateTime: moment('2023-06-26T00:28:20Z'),
+          want: {
+            initialReviewedWithin24h: null,
+            rerequestReviewedWithin24h: null,
+            totalRerequest: 0,
+          },
+        },
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-23T20:28:20Z',
+            },
+          ],
+          reviews: [],
+          currentDateTime: moment('2023-06-27T00:28:20Z'),
+          want: {
+            initialReviewedWithin24h: false,
+            rerequestReviewedWithin24h: null,
+            totalRerequest: 0,
+          },
+        },
+        // ** test re-request review ***
+        // no re-request review made
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-14T21:33:27Z',
+            },
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-15T13:14:46Z',
+            },
+          ],
+          currentDateTime: today,
+          want: {
+            initialReviewedWithin24h: true,
+            rerequestReviewedWithin24h: null,
+            totalRerequest: 0,
+          },
+        },
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-14T21:33:27Z',
+            },
+            {
+              created_at: '2023-06-14T22:33:27Z',
+            },
+          ],
+          reviews: [],
+          currentDateTime: today,
+          want: {
+            initialReviewedWithin24h: false,
+            rerequestReviewedWithin24h: null,
+            totalRerequest: 0,
+          },
+        },
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-14T21:33:27Z',
+            },
+            {
+              created_at: '2023-06-14T22:33:27Z',
+            },
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-15T13:14:46Z',
+            },
+            {
+              submitted_at: '2023-06-15T14:14:46Z',
+            },
+          ],
+          currentDateTime: today,
+          want: {
+            initialReviewedWithin24h: true,
+            rerequestReviewedWithin24h: null,
+            totalRerequest: 0,
+          },
+        },
+        // re-request not pass deadline
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-22T13:33:37Z',
+            },
+            {
+              created_at: '2023-06-22T15:33:37Z',
+            },
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-22T14:04:21Z',
+            },
+          ],
+          currentDateTime: moment('2023-06-22T15:40:37Z'),
+          want: {
+            initialReviewedWithin24h: true,
+            rerequestReviewedWithin24h: null,
+            totalRerequest: 1,
+          },
+        },
+        // re-request reviewed by deadline
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-13T21:00:00Z',
+            },
+            {
+              created_at: '2023-06-15T12:55:36Z',
+            },
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-14T21:00:00Z',
+            },
+            {
+              submitted_at: '2023-06-15T17:48:08Z',
+            },
+          ],
+          currentDateTime: today,
+          want: {
+            initialReviewedWithin24h: true,
+            rerequestReviewedWithin24h: true,
+            totalRerequest: 1,
+          },
+        },
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-09T14:11:15Z',
+            },
+            {
+              created_at: '2023-06-12T13:39:17Z',
+            },
+            {
+              created_at: '2023-06-12T13:39:18Z',
+            },
+            {
+              created_at: '2023-06-12T14:26:22Z',
+            },
+            {
+              created_at: '2023-06-12T14:35:26Z',
+            },
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-09T20:19:45Z',
+            },
+            {
+              submitted_at: '2023-06-09T21:19:00Z',
+            },
+            {
+              submitted_at: '2023-06-09T21:20:06Z',
+            },
+            {
+              submitted_at: '2023-06-09T21:22:26Z',
+            },
+            {
+              submitted_at: '2023-06-12T13:20:09Z',
+            },
+            {
+              submitted_at: '2023-06-12T13:34:11Z',
+            },
+            {
+              submitted_at: '2023-06-12T13:39:04Z',
+            },
+            {
+              submitted_at: '2023-06-12T13:50:56Z',
+            },
+            {
+              submitted_at: '2023-06-12T14:14:58Z',
+            },
+            {
+              submitted_at: '2023-06-12T14:26:34Z',
+            },
+            {
+              submitted_at: '2023-06-12T14:31:57Z',
+            },
+            {
+              submitted_at: '2023-06-12T18:00:53Z',
+            },
+          ],
+          want: {
+            initialReviewedWithin24h: true,
+            rerequestReviewedWithin24h: true,
+            totalRerequest: 4,
+          },
+        },
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-13T21:26:05Z',
+            },
+            {
+              created_at: '2023-06-15T12:55:36Z',
+            },
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-14T22:48:08Z',
+            },
+            {
+              submitted_at: '2023-06-15T17:48:08Z',
+            },
+          ],
+          currentDateTime: today,
+          want: {
+            initialReviewedWithin24h: false,
+            rerequestReviewedWithin24h: true,
+            totalRerequest: 1,
+          },
+        },
+        // re-request not reviewed by deadline
+        {
+          reviewRequests: [
+            {
+              created_at: '2023-06-13T21:26:05Z',
+            },
+            {
+              created_at: '2023-06-15T12:55:36Z',
+            },
+          ],
+          reviews: [
+            {
+              submitted_at: '2023-06-14T17:48:08Z',
+            },
+            {
+              submitted_at: '2023-06-14T20:48:08Z',
+            },
+            {
+              submitted_at: '2023-06-16T17:48:08Z',
+            },
+          ],
+          currentDateTime: today,
+          want: {
+            initialReviewedWithin24h: true,
+            rerequestReviewedWithin24h: false,
+            totalRerequest: 1,
+          },
+        },
+      ];
+
+      for (const testCase of testCases) {
+        const { reviewRequests, reviews, currentDateTime, want } = testCase;
+
+        const result = reviewedWithin24hrWithBreakdown(
+          reviewRequests,
+          reviews,
+          currentDateTime
+        );
+
+        expect(result).toEqual(want);
+      }
+    });
   });
 
   it('Should correctly get the deadline date', () => {

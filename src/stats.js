@@ -1,12 +1,20 @@
 import moment from 'moment';
-import { reviewedWithin24hrs } from './utils/reportUtils';
+import {
+  reviewedWithin24hrs,
+  reviewedWithin24hrWithBreakdown,
+} from './utils/reportUtils';
 
 export class Stats {
   constructor(github) {
     this.gh = github;
   }
 
-  async get24hReviewStats({ state, startDate, endDate }) {
+  async get24hReviewStats({
+    state,
+    startDate,
+    endDate,
+    withBreakdown = false,
+  }) {
     const teamMembers = await this.gh.getAllTeamMembers();
 
     const prs = await this.gh.getPullRequests({
@@ -29,14 +37,27 @@ export class Stats {
       // get reviews
       const reviews = await this.gh.getReviews(repo, pullNumber);
 
-      const doneWithin24hr = reviewedWithin24hrs(
-        reviewRequests,
-        reviews,
-        moment()
-      );
-
       pr.review_requested = reviewRequests.length > 0;
-      pr.reviewed_within_24_hours = doneWithin24hr;
+
+      if (!withBreakdown) {
+        const doneWithin24hr = reviewedWithin24hrs(
+          reviewRequests,
+          reviews,
+          moment()
+        );
+
+        pr.reviewed_within_24_hours = doneWithin24hr;
+      } else {
+        const {
+          initialReviewedWithin24h,
+          rerequestReviewedWithin24h,
+          totalRerequest,
+        } = reviewedWithin24hrWithBreakdown(reviewRequests, reviews, moment());
+
+        pr.initial_reviewed_within_24h = initialReviewedWithin24h;
+        pr.rerequest_review = totalRerequest > 0;
+        pr.rerequest_reviewed_within_24h = rerequestReviewedWithin24h;
+      }
     }
 
     return prs;

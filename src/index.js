@@ -18,17 +18,18 @@ const stats = new Stats(gh);
 const exporter = new Exporter();
 const reportGenerator = new ReportGenerator(gh, stats, exporter);
 
-// // using relative date range
+// using relative date range
 // const startDaysAgo = 14;
 // reportGenerator.createDependabotPRsReport({
 //   startDaysAgo,
 // });
 
-// // using a absolute date range
+// using a absolute date range
 // reportGenerator.create24hReviewStatsReport({
 //   startDate: '2023-01-04 11:00:00 AM',
-//   endDate: '2023-06-21 10:59:59 AM',
+//   endDate: '2023-07-05 10:59:59 AM',
 //   daysInterval: 14,
+//   withBreakdown: true,
 // });
 
 reportGenerator.createDependabotPRsReport({

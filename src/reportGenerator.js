@@ -154,6 +154,7 @@ export class ReportGenerator {
     endDate,
     startDaysAgo,
     daysInterval,
+    withBreakdown = false,
   }) {
     const { startDate: start, endDate: end } = this._resolveDateRange(
       state,
@@ -167,6 +168,7 @@ export class ReportGenerator {
         state,
         startDate: start,
         endDate: end,
+        withBreakdown,
       })
       .then((data) => {
         if (!data.length) {
@@ -178,6 +180,7 @@ export class ReportGenerator {
           startDate: start,
           endDate: end,
           daysInterval,
+          withBreakdown,
         });
 
         const updatedFileName = this._addDetailsToFileName(
@@ -198,34 +201,73 @@ export class ReportGenerator {
       });
   }
 
-  _get24hReviewSummary(data, startDate, endDate) {
+  _get24hReviewSummary(data, startDate, endDate, withBreakdown) {
     const totalCreated = data.length;
     const totalOpen = data.filter((d) => d.state === PR_STATE.open).length;
     const totalClosed = data.filter((d) => d.state === PR_STATE.closed).length;
     const totalPRsWithReviewRequest = data.filter(
       (d) => d.review_requested
     ).length;
-    const reviewedWithin24hr = data.filter(
-      (d) => d.reviewed_within_24_hours
-    ).length;
-    const percentageReviewWithin24hr = (
-      (reviewedWithin24hr / totalPRsWithReviewRequest) *
-      100
-    ).toFixed(2);
 
-    return {
+    const summary = {
       start_date: startDate,
       end_date: endDate,
       total_created: totalCreated,
       total_open: totalOpen,
       total_closed: totalClosed,
       total_prs_with_review_request: totalPRsWithReviewRequest,
-      reviewed_within_24h: reviewedWithin24hr,
-      percentage_reviewed_within_24h: `${percentageReviewWithin24hr}%`,
     };
+
+    if (!withBreakdown) {
+      const reviewedWithin24hr = data.filter(
+        (d) => d.reviewed_within_24_hours
+      ).length;
+      const percentageReviewWithin24hr = (
+        (reviewedWithin24hr / totalPRsWithReviewRequest) *
+        100
+      ).toFixed(2);
+
+      summary.reviewed_within_24h = reviewedWithin24hr;
+      summary.percentage_reviewed_within_24h = `${percentageReviewWithin24hr}%`;
+    } else {
+      const initialReviewedWithin24h = data.filter(
+        (d) => d.initial_reviewed_within_24h
+      ).length;
+
+      const percentageInitialReviewedWithin24h = (
+        (initialReviewedWithin24h / totalPRsWithReviewRequest) *
+        100
+      ).toFixed(2);
+
+      summary.initial_reviewed_within_24h = initialReviewedWithin24h;
+      summary.percentage_initial_reviewed_within_24h = `${percentageInitialReviewedWithin24h}%`;
+
+      const rerequestReviewedWithin24h = data.filter(
+        (d) => d.rerequest_reviewed_within_24h
+      ).length;
+
+      const totalRerequest = data.filter((d) => d.rerequest_review).length;
+
+      const percentageRerequestReviewedWithin24h = (
+        (rerequestReviewedWithin24h / totalRerequest) *
+        100
+      ).toFixed(2);
+
+      summary.total_prs_with_rerequested_review = totalRerequest;
+      summary.rerequest_reviewed_within_24h = rerequestReviewedWithin24h;
+      summary.percentage_rerequest_reviewed_within_24h = `${percentageRerequestReviewedWithin24h}%`;
+    }
+
+    return summary;
   }
 
-  _get24hReviewSummaryByInterval({ data, startDate, endDate, daysInterval }) {
+  _get24hReviewSummaryByInterval({
+    data,
+    startDate,
+    endDate,
+    daysInterval,
+    withBreakdown,
+  }) {
     const result = [];
     let buckets;
 
@@ -251,7 +293,7 @@ export class ReportGenerator {
     }
 
     for (const { start, end, data: d } of buckets) {
-      const summary = this._get24hReviewSummary(d, start, end);
+      const summary = this._get24hReviewSummary(d, start, end, withBreakdown);
       result.push(summary);
     }
     return result;

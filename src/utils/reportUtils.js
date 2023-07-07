@@ -88,52 +88,151 @@ export function reviewedWithin24hrs(reviewRequests, reviews, currentDateTime) {
   const filteredReviews = reviews.filter((r) => r.submitted_at);
 
   if (reviewRequests.length === 0) {
-    return '';
-  }
-
-  if (
-    filteredReviews.length === 0 &&
-    getDeadline(reviewRequests[0].created_at) > currentDateTime
-  ) {
-    return '';
+    return null;
   }
 
   const uniqueRequestsDates = [
     ...new Set(reviewRequests.map((request) => request.created_at)),
   ];
 
-  for (let i = 0; i < uniqueRequestsDates.length; i++) {
-    const current = moment(uniqueRequestsDates[i]);
-    let deadline = getDeadline(current);
+  const initialReviewedWithin24h = reviewRequestsDoneByDeadline(
+    uniqueRequestsDates,
+    filteredReviews,
+    currentDateTime
+  );
 
-    let relevantReviews = filteredReviews;
-
-    if (uniqueRequestsDates.length > 1) {
-      relevantReviews = filteredReviews.filter((reviews) => {
-        return moment(reviews.submitted_at).isAfter(current);
-      });
-    }
-
-    const doneWithin24hr = relevantReviews.filter((review) => {
-      return moment(review.submitted_at).isSameOrBefore(deadline);
-    });
-
-    if (relevantReviews && doneWithin24hr.length === 0) {
-      return false;
-    }
-
-    const lastRequest = i === uniqueRequestsDates.length - 1;
-
-    if (
-      lastRequest &&
-      relevantReviews.length > 0 &&
-      doneWithin24hr.length > 0
-    ) {
-      return true;
-    }
+  if (uniqueRequestsDates.length === 1 || filteredReviews.length === 0) {
+    return initialReviewedWithin24h;
   }
 
-  return '';
+  const rerequestDates = uniqueRequestsDates.filter((date) => {
+    const firstReviewedDate = moment(filteredReviews[0].submitted_at);
+    if (moment(date).isAfter(firstReviewedDate)) {
+      return true;
+    }
+  });
+
+  const rerequestReviewedWithin24h = reviewRequestsDoneByDeadline(
+    rerequestDates,
+    filteredReviews,
+    currentDateTime
+  );
+
+  if (
+    initialReviewedWithin24h === false ||
+    rerequestReviewedWithin24h === false
+  ) {
+    return false;
+  }
+
+  if (
+    (initialReviewedWithin24h && rerequestReviewedWithin24h) ||
+    (initialReviewedWithin24h && rerequestReviewedWithin24h === null)
+  ) {
+    return true;
+  }
+
+  return null;
+}
+
+function isReviewedByDeadline(
+  relevantReviews,
+  deadline,
+  currentDateTime = moment()
+) {
+  // deadline date has not passed the current date time
+  if (
+    relevantReviews.length === 0 &&
+    moment(deadline).isAfter(currentDateTime)
+  ) {
+    return null;
+  }
+
+  // deadline date has passed the current date time
+  const doneWithin24hr = relevantReviews.filter((review) => {
+    return moment(review.submitted_at).isSameOrBefore(deadline);
+  });
+
+  if (relevantReviews && doneWithin24hr.length === 0) {
+    return false;
+  }
+
+  return true;
+}
+
+function reviewRequestsDoneByDeadline(
+  reviewRequestDates,
+  reviews,
+  currentDateTime
+) {
+  if (reviewRequestDates.length === 0) {
+    return null;
+  }
+
+  for (let i = 0; i < reviewRequestDates.length; i++) {
+    const currentReviewRequest = moment(reviewRequestDates[i]);
+    let deadline = getDeadline(currentReviewRequest);
+
+    let relevantReviews = reviews;
+
+    relevantReviews = relevantReviews.filter((review) => {
+      return moment(review.submitted_at).isAfter(currentReviewRequest);
+    });
+    return isReviewedByDeadline(relevantReviews, deadline, currentDateTime);
+  }
+}
+
+export function reviewedWithin24hrWithBreakdown(
+  reviewRequests,
+  reviews,
+  currentDateTime
+) {
+  const filteredReviews = reviews.filter((r) => r.submitted_at);
+
+  if (reviewRequests.length === 0) {
+    return {
+      initialReviewedWithin24h: null,
+      rerequestReviewedWithin24h: null,
+      totalRerequest: 0,
+    };
+  }
+
+  const uniqueRequestsDates = [
+    ...new Set(reviewRequests.map((request) => request.created_at)),
+  ];
+
+  const initialReviewedWithin24h = reviewRequestsDoneByDeadline(
+    uniqueRequestsDates,
+    filteredReviews,
+    currentDateTime
+  );
+
+  if (uniqueRequestsDates.length === 1 || filteredReviews.length === 0) {
+    return {
+      initialReviewedWithin24h,
+      rerequestReviewedWithin24h: null,
+      totalRerequest: 0,
+    };
+  }
+
+  const rerequestDates = uniqueRequestsDates.filter((date) => {
+    const firstReviewedDate = moment(filteredReviews[0].submitted_at);
+    if (moment(date).isAfter(firstReviewedDate)) {
+      return true;
+    }
+  });
+
+  const rerequestReviewedWithin24h = reviewRequestsDoneByDeadline(
+    rerequestDates,
+    filteredReviews,
+    currentDateTime
+  );
+
+  return {
+    initialReviewedWithin24h,
+    rerequestReviewedWithin24h,
+    totalRerequest: rerequestDates.length,
+  };
 }
 
 export function resolveDateRange(startDate, endDate, startDaysAgo) {
