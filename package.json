@@ -7,7 +7,7 @@
   "scripts": {
     "build": "babel src -d dist",
     "start": "npm run build && node --es-module-specifier-resolution=node dist/index.js",
-    "start:watch": "npm run build && nodemon --es-module-specifier-resolution=node dist/index.js",
+    "watch": "nodemon --experimental-modules --es-module-specifier-resolution=node dist/index.js",
     "test": "jest"
   },
   "author": "",

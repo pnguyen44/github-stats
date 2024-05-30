@@ -3,7 +3,7 @@ import { PR_STATE } from './constant';
 
 import { Exporter } from './exporter';
 import { Stats } from './stats';
-import { ReportGenerator } from './ReportGenerator';
+import { ReportGenerator } from './reportGenerator';
 
 import { config } from './config';
 

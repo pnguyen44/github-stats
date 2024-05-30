@@ -4,9 +4,10 @@ Generates reports using data fetched from GitHub API.
 
 ## prerequisite
 
-This project pulls in data from GitHub using the GitHub API. You need to generate a token in order to use the API.
-
-To generate a token, please follow the instructions in the [GitHub docs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#keeping-your-personal-access-tokens-secure).
+- This project pulls in data from GitHub using the GitHub API. You need to generate a token in order to use the API.
+  - To generate a token, please follow the instructions in the [GitHub docs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic).
+- Node version 16
+- Install dependencies: `npm clean-install`
 
 ## pre-commit
 
